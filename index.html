@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>電信工程施工進度_v2</title>
+  <title>電信工程施工進度_v2.1</title>
   <style id="mcp-host-fonts">
     @font-face {
       font-family: "Anthropic Sans";
@@ -65,6 +65,12 @@
     #budget-bars .bar-row:hover, #bureau-bars .bar-row:hover { background: var(--color-background-secondary); }
     #budget-bars .bar-row.active, #bureau-bars .bar-row.active { background: var(--color-background-info); border-color: var(--color-border-info); font-weight: 500; }
     .hide-board-engine { display: none !important; }
+    
+    /* 🚀 設計師看板：加入智慧限高自適應與滾動條防爆設計 */
+    #designer-bars { max-height: 250px; overflow-y: auto; padding-right: 4px; }
+    #designer-bars::-webkit-scrollbar { width: 4px; }
+    #designer-bars::-webkit-scrollbar-thumb { background: var(--color-border-secondary); border-radius: 2px; }
+
     .bar-label { width: 140px; min-width: 140px; color: var(--color-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .bar-track { flex: 1; background: var(--color-background-secondary); border-radius: 4px; height: 10px; overflow: hidden; }
     .bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
@@ -84,12 +90,17 @@
     .search-input-box { width: 100%; max-width: 480px; height: 36px; padding: 8px 12px; font-size: 13px; background: var(--color-background-primary); color: var(--color-text-primary); border: 0.5px solid var(--color-border-primary, rgba(0,0,0,0.4)); border-radius: var(--border-radius-md); outline: none; transition: all 0.15s ease; margin-bottom: 1rem; }
     .search-input-box:focus { border-color: var(--color-border-info); box-shadow: 0 0 0 3px var(--color-background-info); }
 
-    /* 表格容器優化 */
+    /* 表格容器優化與寬度自適應 */
     .table-container { overflow-x: auto; background: var(--color-background-primary); border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); }
-    #detail-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; min-width: 1320px; }
+    #detail-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; min-width: 1530px; }
     #detail-table th { text-align: left; padding: 8px; border-bottom: 0.5px solid var(--color-border-secondary); color: var(--color-text-secondary); font-weight: 500; background: var(--color-background-secondary); }
     #detail-table td { padding: 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
     #detail-table tr:hover td { background: var(--color-background-secondary); }
+
+    /* 🚀 備註文字框與儲存按鈕樣式 */
+    .note-input { width: 130px; height: 26px; font-size: 12px; padding: 2px 6px; border: 0.5px solid var(--color-border-primary); border-radius: 4px; background: var(--color-background-primary); color: var(--color-text-primary); }
+    .note-save-btn { font-size: 11px; font-weight: 600; padding: 4px 8px; background: var(--color-background-info); color: var(--color-text-info); border: none; border-radius: 4px; cursor: pointer; margin-left: 4px; }
+    .note-save-btn:hover { opacity: 0.8; }
   </style>
   <style id="mcp-host-variables">
     :root {
@@ -200,7 +211,7 @@
     </div>
     
     <div class="filter-section-title">🔍 智慧手動輸入篩選器：</div>
-    <input type="text" id="txt-search" class="search-input-box" placeholder="輸入欲查詢的工程編號、交商日期、工單流水號、RD1備註號碼...">
+    <input type="text" id="txt-search" class="search-input-box" placeholder="輸入欲查詢的工程編號、交商日期、工單流水號、RD1備註或手動備註...">
 
     <div class="filter-section-title">🏗️ 工程編號篩選 (支援複選)：</div>
     <div class="filter-row" id="filter-engno-toggle-btns"></div>
@@ -235,6 +246,7 @@
             <th style="width:200px">施工地點</th>
             <th style="width:140px">RD1備註</th>
             <th style="width:110px">所屬交換局名</th>
+            <th style="width:210px; background:var(--color-background-info)">📝 手動備註</th>
           </tr>
         </thead>
         <tbody id="detail-tbody"></tbody>
@@ -246,10 +258,12 @@
   
   <script>
     // =========================================================================
-    // 🔒 安全區塊：請在此貼上安全加密產生器產出的長字串密文
+    // 🔒 安全區塊：保留您原有的 V2 安全加密亂碼密文
     // =========================================================================
     const ENCRYPTED_CONFIG = "PlO6p1rLsLHkRs9Gzn6WxmjXEcO3eVuJiuiBmmeT/HC6D16bSi51XIIEMqUbRvEfObbbAcBmJhtODHjfejbLoe/ms3na34XEt95rKChiPRc+MDgXsOIxMU5M1JezpwSSTEzRh1EgT+DhQWBn5sXdLJpVs2outWlEckHn0MUcI8Ae2JMCOhaleCJbGzSvaAEh4LU9Jp+aFLKjSqXKo5Z4N+A="; 
     const CONFIG_RANGE = "工作表1!A:ZZ"; 
+    // 🚀 請在此貼上您的 Google Apps Script 網頁應用程式部署 URL (Web App URL)
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwcti7FTuoHOiy1gnK2reSnDhEy-ZDPA-CrvYHPVCDBhvFxR-bWv88q7_3MtSYkNfeY/exec";
     // =========================================================================
 
     let globalData = [];
@@ -304,7 +318,6 @@
     }
 
     async function fetchCloudSheetsData(spreadsheetId, apiKey) {
-      // document.getElementById('loading-indicator').innerText = "🔄 密碼驗證成功！正在連線 Google API 載入最新維運數據...";
       document.getElementById('loading-indicator').innerText = "🔄 密碼驗證成功！載入最新...";
       const encodedRange = encodeURIComponent(CONFIG_RANGE);
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodedRange}?key=${apiKey}`;
@@ -328,6 +341,7 @@
         const idxLoc = headers.indexOf('施工地點');
         const idxRd1Note = headers.indexOf('RD1備註');     
         const idxBureau = headers.indexOf('交換局名');
+        const idxManualNote = headers.indexOf('手動備註'); // 🚀 動態偵測手動備註索引
 
         globalData = rows.map(row => {
           const getCell = (idx) => (idx !== -1 && idx < row.length && row[idx] !== undefined) ? String(row[idx]).trim() : '';
@@ -347,7 +361,8 @@
             status: rawStatus,
             loc: getCell(idxLoc),
             rd1Note: getCell(idxRd1Note) || '---',         
-            bureau: getCell(idxBureau) || '未知區域'
+            bureau: getCell(idxBureau) || '未知區域',
+            manualNote: getCell(idxManualNote) || '' // 🚀 對接手動備註
           };
         });
 
@@ -359,11 +374,10 @@
     }
 
     function calculateAndRenderDashboard() {
-      // 🚀 核心升級：第一優先順位載入資料表，防範競爭鎖定
+      // 🚀 優先權調度：第一順位先載入資料表，防堵執行緒競爭
       setupFilterControlLogic();
       renderTable();
 
-      // 接下來在安全防護(try/catch)下非同步加載其餘圖表組件
       try {
         const totalJobs = globalData.length;
         const totalPoints = globalData.reduce((acc, curr) => acc + curr.points, 0);
@@ -405,6 +419,7 @@
           bureauBarsEl.innerHTML += `<div class="bar-row" data-bureau="${name}"><span class="bar-label" title="${name}">${name}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:#378ADD"></div></div><span class="bar-count">${count} 案</span></div>`;
         });
 
+        // 🚀 看板結構修改：改為垂直單欄 Flow，配合 CSS max-height 與滾動條完美自適應
         const desMap = {}; globalData.forEach(d => { if (!desMap[d.designer]) desMap[d.designer] = { count: 0, points: 0 }; desMap[d.designer].count++; desMap[d.designer].points += d.points; });
         const desSorted = Object.entries(desMap).sort((a, b) => b[1].count - a[1].count);
         const desBarsEl = document.getElementById('designer-bars'); 
@@ -416,7 +431,7 @@
         const palette = ['#378ADD', '#7F77DD', '#1D9E75', '#BA7517', '#D85A30', '#D4537E'];
         desSorted.forEach(([name, info], idx) => {
           const pct = (info.count / maxDesCount) * 100;
-          desBarsEl.innerHTML += `<div class="bar-row" style="background:var(--color-background-secondary); padding: 6px 10px; border-radius:6px; border:0.5px solid var(--color-border-tertiary)"><span class="bar-label" style="width:65px;min-width:65px;font-weight:600">${name}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${palette[idx % palette.length]}"></div></div><span class="bar-count" style="width:50px">${info.count} 件</span><span style="font-size:11px;color:var(--color-text-tertiary);width:70px;text-align:right;font-family:monospace">${Math.round(info.points).toLocaleString()} 點</span></div>`;
+          desBarsEl.innerHTML += `<div class="bar-row" style="background:var(--color-background-secondary); padding: 6px 10px; border-radius:6px; border:0.5px solid var(--color-border-tertiary); width:100%;"><span class="bar-label" style="width:65px; min-width:65px; font-weight:600">${name}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${palette[idx % palette.length]}"></div></div><span class="bar-count" style="width:50px">${info.count} 件</span><span style="font-size:11px;color:var(--color-text-tertiary);width:75px;text-align:right;font-family:monospace">${Math.round(info.points).toLocaleString()} 點</span></div>`;
         });
 
         if (statusChartInstance) statusChartInstance.destroy();
@@ -452,10 +467,10 @@
           const btn = document.createElement('button'); btn.className = 'filter-btn'; btn.textContent = `${name}(${info.count})`; btn.dataset.designer = name; dFbEl.appendChild(btn);
         });
 
-        // 刷新一次狀態連動
+        // 動態重繪連動
         renderTable();
       } catch (chartErr) {
-        console.warn("圖表渲染微幅異常，但不影響資料清單瀏覽：", chartErr);
+        console.warn("圖表加載微幅延遲，不影響清單檢視：", chartErr);
       }
     }
 
@@ -523,6 +538,46 @@
       });
     }
 
+    // 🚀 備註異步即時同步 API
+    async function saveManualNote(id) {
+      const noteInput = document.getElementById(`note-${id}`);
+      const saveBtn = document.getElementById(`save-btn-${id}`);
+      if (!noteInput) return;
+      
+      const noteValue = noteInput.value.trim();
+      if (APPS_SCRIPT_URL.includes("xxxx")) { alert("請先填寫您的 Google Apps Script 部署 URL！"); return; }
+      
+      saveBtn.innerText = "⏳ 寫入";
+      saveBtn.disabled = true;
+
+      try {
+        const fetchUrl = `${APPS_SCRIPT_URL}?id=${encodeURIComponent(id)}&note=${encodeURIComponent(noteValue)}`;
+        const response = await fetch(fetchUrl, { mode: 'cors' });
+        const resJson = await response.json();
+
+        if (resJson.status === 'success') {
+          saveBtn.innerText = "✅ 成功";
+          saveBtn.style.background = "var(--color-border-success)";
+          
+          // 更新本地記憶體
+          const targetObj = globalData.find(d => d.id === id);
+          if (targetObj) targetObj.manualNote = noteValue;
+          
+          setTimeout(() => {
+            saveBtn.innerText = "儲存";
+            saveBtn.style.background = "var(--color-background-info)";
+            saveBtn.disabled = false;
+          }, 1200);
+        } else {
+          alert("寫入失敗：" + resJson.message);
+          saveBtn.innerText = "儲存"; saveBtn.disabled = false;
+        }
+      } catch (err) {
+        alert("連線異常，請確認 GAS 是否已設定為「所有人」存取：" + err.message);
+        saveBtn.innerText = "儲存"; saveBtn.disabled = false;
+      }
+    }
+
     function syncFilterUIStyles() {
       document.querySelectorAll('#budget-bars .bar-row').forEach(row => { row.classList.toggle('active', selectedBudgets.has(row.dataset.budget)); });
       document.querySelectorAll('#filter-budget-btns .filter-btn').forEach(btn => { if (btn.dataset.budget === 'all') btn.classList.toggle('active', selectedBudgets.size === 0); else btn.classList.toggle('active', selectedBudgets.has(btn.dataset.budget)); });
@@ -551,6 +606,7 @@
           d.budget.toLowerCase().includes(textSearchQuery) ||
           d.loc.toLowerCase().includes(textSearchQuery) ||
           d.rd1Note.toLowerCase().includes(textSearchQuery) || 
+          d.manualNote.toLowerCase().includes(textSearchQuery) || // 🚀 模糊搜尋支援手動備註
           d.bureau.toLowerCase().includes(textSearchQuery);
 
         const matchesEngNo = (selectedEngNos.size === 0) || selectedEngNos.has(d.engNo);
@@ -570,7 +626,9 @@
         return matchesText && matchesEngNo && matchesBudget && matchesDesigner && matchesStatus && matchesBureau;
       });
 
-      document.getElementById('filter-count').innerText = `${currentFilteredData.length.toLocaleString()} 件篩選工單`;
+      if(document.getElementById('filter-count')) {
+        document.getElementById('filter-count').innerText = `${currentFilteredData.length.toLocaleString()} 件篩選工單`;
+      }
 
       let subCompleted = 0, subDelayed = 0, subPending = 0;
       currentFilteredData.forEach(d => {
@@ -591,6 +649,7 @@
       }
 
       const tbody = document.getElementById('detail-tbody');
+      if(!tbody) return;
       const renderLimit = currentFilteredData.slice(0, 60); 
 
       tbody.innerHTML = renderLimit.map(d => `
@@ -601,18 +660,24 @@
           <td style="font-family:monospace;font-size:13px;color:var(--color-text-secondary)">${d.handover}</td>
           <td style="font-family:monospace;font-size:13px;color:var(--color-text-secondary)">${d.estComplete}</td>
           <td style="font-size:13px;color:var(--color-text-secondary)">${d.budget}</td>
-          <td style="text-align:right;font-weight:500;font-family:monospace">${Math.round(d.points).toLocaleString()}</td>
+          <td style="text-align:right;font-weight:500;font-family:monospace;font-size:13px;">${Math.round(d.points).toLocaleString()}</td>
           <td style="text-align:center">${statusTag(d.status, d.estComplete, todayNum)}</td>
           <td style="color:var(--color-text-secondary);font-size:13px" title="${d.loc}">${d.loc}</td>
           <td style="font-size:13px;color:var(--color-text-tertiary)" title="${d.rd1Note}">${d.rd1Note}</td>
           <td style="font-size:13px;color:var(--color-text-tertiary)">${d.bureau}</td>
+          <td>
+            <div style="display:flex; align-items:center;">
+              <input type="text" id="note-${d.id}" class="note-input" value="${d.manualNote}" placeholder="點擊鍵入備註...">
+              <button id="save-btn-${d.id}" class="note-save-btn" onclick="saveManualNote('${d.id}')">儲存</button>
+            </div>
+          </td>
         </tr>
       `).join('');
 
       if (currentFilteredData.length > 60) {
-        tbody.innerHTML += `<tr><td colspan="11" style="text-align:center;color:var(--color-text-tertiary);background:var(--color-background-secondary);font-size:11px;padding:8px">💡 提示：符合五維複合條件共 ${currentFilteredData.length} 筆，已自動分流顯示前 60 筆。</td></tr>`;
+        tbody.innerHTML += `<tr><td colspan="12" style="text-align:center;color:var(--color-text-tertiary);background:var(--color-background-secondary);font-size:11px;padding:8px">💡 提示：符合五維複合條件共 ${currentFilteredData.length} 筆，已自動分流顯示前 60 筆。</td></tr>`;
       } else if (currentFilteredData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--color-text-tertiary);padding:24px">❌ 查無任何匹配工單。</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--color-text-tertiary);padding:24px">❌ 查無任何匹配工單。</td></tr>`;
       }
     }
 
@@ -630,7 +695,7 @@
 
     function exportFilteredTableToCSV() {
       if (!currentFilteredData || currentFilteredData.length === 0) { alert("目前沒有任何數據可以導出！"); return; }
-      const headers = ["工程編號", "工作單流水號", "設計員", "交商日期", "預完日期", "預算動支別", "交商積點數", "回報狀態", "施工地點", "RD1備註", "交換局名"];
+      const headers = ["工程編號", "工作單流水號", "設計員", "交商日期", "預完日期", "預算動支別", "交商積點數", "回報狀態", "手動備註", "施工地點", "RD1備註", "交換局名"];
       let csvString = "\ufeff" + headers.join(",") + "\n";
 
       const today = new Date();
@@ -649,7 +714,7 @@
           else if (d.status.includes('3.未完工擇日')) textStatus = '擇日續工';
         }
 
-        const rowData = [d.engNo, d.id, d.designer, d.handover, d.estComplete, d.budget, d.points, textStatus, d.loc, d.rd1Note, d.bureau];
+        const rowData = [d.engNo, d.id, d.designer, d.handover, d.estComplete, d.budget, d.points, textStatus, d.manualNote, d.loc, d.rd1Note, d.bureau];
         const escapedRow = rowData.map(val => {
           let str = String(val).replace(/"/g, '""');
           if (str.includes(',') || str.includes('\n') || str.includes('"')) return `"${str}"`;
