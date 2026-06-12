@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>電信工程施工進度_v1.3</title>
+  <title>電信工程施工進度_v2.3</title>
   <style id="mcp-host-fonts">
     @font-face {
       font-family: "Anthropic Sans";
@@ -36,73 +36,37 @@
       --bg2: var(--color-background-secondary);
       --b: var(--color-border-secondary);
     }
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: "Anthropic Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: var(--color-background-primary, #fff);
       color: var(--color-text-primary, #131313);
       padding: 20px;
     }
-    html, body {
-      scrollbar-width: none;
-    }
-    html::-webkit-scrollbar, body::-webkit-scrollbar {
-      width: 0;
-      height: 0;
-    }
+    html, body { scrollbar-width: none; }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0; height: 0; }
     
-    .db-header {
-      margin-bottom: 1.5rem;
-      border-bottom: 0.5px solid var(--color-border-tertiary);
-      padding-bottom: 1rem;
-    }
-    .db-header h1 {
-      font-size: 24px;
-      font-weight: 600;
-      color: var(--color-text-primary);
-    }
-    .db-header p {
-      font-size: 14px;
-      color: var(--color-text-tertiary);
-      margin-top: 4px;
-    }
-
-    .loading-status {
-      display: inline-block;
-      padding: 6px 12px;
-      background: var(--color-background-warning);
-      color: var(--color-text-warning);
-      border-radius: 4px;
-      font-size: 13px;
-      margin-bottom: 15px;
-      line-height: 1.5;
-    }
-
+    .db-header { margin-bottom: 1.5rem; border-bottom: 0.5px solid var(--color-border-tertiary); padding-bottom: 1rem; }
+    .db-header h1 { font-size: 24px; font-weight: 600; color: var(--color-text-primary); }
+    .db-header p { font-size: 14px; color: var(--color-text-tertiary); margin-top: 4px; }
+    .loading-status { display: inline-block; padding: 6px 12px; background: var(--color-background-warning); color: var(--color-text-warning); border-radius: 4px; font-size: 13px; margin-bottom: 15px; line-height: 1.5; }
     .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
     .metric { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 1rem; border: 0.5px solid var(--color-border-tertiary); }
     .metric-label { font-size: 12px; color: var(--color-text-secondary); margin: 0 0 4px; }
     .metric-value { font-size: 24px; font-weight: 600; margin: 0; color: var(--color-text-primary); }
     .metric-sub { font-size: 11px; color: var(--color-text-tertiary); margin: 2px 0 0; }
-    
     .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; margin-bottom: 1rem; box-shadow: var(--shadow-sm); }
     .card-title { font-size: 14px; font-weight: 600; color: var(--color-text-primary); margin: 0; }
-    
     .two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.25rem; margin-bottom: 1rem; }
     
-    /* 橫條圖互動樣式 */
+    /* 橫條圖外觀與高亮 */
     .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 12px; padding: 4px 6px; border-radius: 6px; transition: all 0.1s ease; border: 0.5px solid transparent; }
     #budget-bars .bar-row, #bureau-bars .bar-row { cursor: pointer; }
     #budget-bars .bar-row:hover, #bureau-bars .bar-row:hover { background: var(--color-background-secondary); }
     #budget-bars .bar-row.active, #bureau-bars .bar-row.active { background: var(--color-background-info); border-color: var(--color-border-info); font-weight: 500; }
-
-    /* 看板收合引擎 */
     .hide-board-engine { display: none !important; }
-
-    /* 🚀 設計師看板：加入高自適應限高與滾動條防爆設計 */
+    
+    /* 設計師看板：加入智慧限高自適應與滾動條防爆設計 */
     #designer-bars { max-height: 250px; overflow-y: auto; padding-right: 4px; }
     #designer-bars::-webkit-scrollbar { width: 4px; }
     #designer-bars::-webkit-scrollbar-thumb { background: var(--color-border-secondary); border-radius: 2px; }
@@ -111,7 +75,6 @@
     .bar-track { flex: 1; background: var(--color-background-secondary); border-radius: 4px; height: 10px; overflow: hidden; }
     .bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
     .bar-count { width: 55px; text-align: right; color: var(--color-text-primary); font-weight: 500; }
-    
     .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: var(--border-radius-md); font-weight: 500; white-space: nowrap; }
     .legend-row { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 14px; font-size: 12px; color: var(--color-text-secondary); }
     .legend-sq { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-right: 5px; vertical-align: middle; }
@@ -121,22 +84,20 @@
     .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; max-height: 120px; overflow-y: auto; padding: 2px; border-radius: 4px; }
     .filter-row::-webkit-scrollbar { width: 4px; height: 4px; }
     .filter-row::-webkit-scrollbar-thumb { background: var(--color-border-secondary); border-radius: 2px; }
-
     .filter-btn { font-size: 11px; padding: 4px 10px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-secondary); cursor: pointer; transition: all 0.1s ease; user-select: none; }
     .filter-btn:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
     .filter-btn.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); font-weight: 500; }
-    
     .search-input-box { width: 100%; max-width: 480px; height: 36px; padding: 8px 12px; font-size: 13px; background: var(--color-background-primary); color: var(--color-text-primary); border: 0.5px solid var(--color-border-primary, rgba(0,0,0,0.4)); border-radius: var(--border-radius-md); outline: none; transition: all 0.15s ease; margin-bottom: 1rem; }
     .search-input-box:focus { border-color: var(--color-border-info); box-shadow: 0 0 0 3px var(--color-background-info); }
 
-    /* 表格容器滾動與欄位大小自適應微調 */
+    /* 表格容器優化與寬度自適應微調 */
     .table-container { overflow-x: auto; background: var(--color-background-primary); border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); }
-    #detail-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; min-width: 1660px; }
+    #detail-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; min-width: 1620px; }
     #detail-table th { text-align: left; padding: 8px; border-bottom: 0.5px solid var(--color-border-secondary); color: var(--color-text-secondary); font-weight: 500; background: var(--color-background-secondary); }
     #detail-table td { padding: 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #detail-table tr:hover td { background: var(--color-background-secondary); }
 
-    /* 🚀 備註與核取組件樣式設定 */
+    /* 備註文字框與儲存按鈕樣式 */
     .note-input { width: 130px; height: 26px; font-size: 12px; padding: 2px 6px; border: 0.5px solid var(--color-border-primary); border-radius: 4px; background: var(--color-background-primary); color: var(--color-text-primary); }
     .note-save-btn { font-size: 11px; font-weight: 600; padding: 4px 8px; background: var(--color-background-info); color: var(--color-text-info); border: none; border-radius: 4px; cursor: pointer; margin-left: 4px; }
     .note-save-btn:hover { opacity: 0.8; }
@@ -159,21 +120,19 @@
       --color-border-secondary: light-dark(rgba(31, 30, 29, 0.3), rgba(222, 220, 209, 0.3));
       --color-border-tertiary: light-dark(rgba(31, 30, 29, 0.15), rgba(222, 220, 209, 0.15));
       --color-border-success: light-dark(rgba(67, 116, 38, 1), rgba(89, 145, 48, 1));
-      --border-radius-md: 8px;
-      --border-radius-lg: 12px;
-      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+      --border-radius-md: 8px; --border-radius-lg: 12px; --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
     }
   </style>
 </head>
 <body>
 
   <div class="db-header">
-    <h1>電信維運工程施工進度儀表板</h1>
-    <p id="bureau-date-label">雲林中心工單管理核心數據分析</p>
+    <h1>工程施工進度儀表板</h1>
+    <p id="bureau-date-label">積點工程施工進度</p>
   </div>
 
   <div id="loading-indicator" class="loading-status">
-     🔄 請稍候
+    🔒 本網頁受安全加密保護，請輸入瀏覽密碼以載入資料...
   </div>
 
   <div class="metric-grid">
@@ -252,8 +211,7 @@
     </div>
     
     <div class="filter-section-title">🔍 智慧手動輸入篩選器：</div>
-    <!-- 🚀 提示文字優化：告訴同仁可以直接輸入 有備註 或 已備註 進行精準過濾 -->
-    <input type="text" id="txt-search" class="search-input-box" placeholder="輸入欲查詢的工程編號、工單流水號、施工地點... (輸入「有備註」可篩選出已有備註之工單)">
+    <input type="text" id="txt-search" class="search-input-box" placeholder="輸入工程編號、工單流水號、地點... (輸入「有備註」或「已備註」過濾出含有手動備註之工單)">
 
     <div class="filter-section-title">🏗️ 工程編號篩選 (支援複選)：</div>
     <div class="filter-row" id="filter-engno-toggle-btns"></div>
@@ -279,11 +237,11 @@
           <tr>
             <th style="width:110px">工程編號</th>
             <th style="width:100px">工作單流水號</th>
-            <th style="width:75px">設計員</th>
+            <th style="width:70px">設計員</th>
             <th style="width:85px">交商日期</th>
             <th style="width:85px">預完日期</th>
             <th style="width:150px">預算動支別</th>
-            <th style="width:75px;text-align:right">交商積點</th>
+            <th style="width:70px;text-align:right">交商積點</th>
             <th style="width:130px;text-align:center">完工狀態</th>
             <th style="width:90px;text-align:center;background:var(--color-background-success);color:var(--color-text-success)">🏗️ 土木ok</th>
             <th style="width:200px">施工地點</th>
@@ -298,18 +256,16 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  
   <script>
-    // ==========================================
-    // 🛠️ GOOGLE SHEETS API V4 設定參數區塊
-    // ==========================================
-    const CONFIG = {
-      SPREADSHEET_ID: "1rMwIa75KaoTWYHmn2rGbwTm7E217x3QYZPt2w4JAi8E", 
-      API_KEY: "AIzaSyA8Ok4r6-w8Ggii57gjPafEROlninDL6sg", 
-      RANGE: "工作表1!A:ZZ" 
-    };
-    // 🚀 請在此貼上您 Apps Script 網頁應用程式部署 URL (Web App URL)
+    // =========================================================================
+    // 🔒 安全區塊：保留您原有的 V2 安全加密亂碼密文
+    // =========================================================================
+    const ENCRYPTED_CONFIG = "PlO6p1rLsLHkRs9Gzn6WxmjXEcO3eVuJiuiBmmeT/HC6D16bSi51XIIEMqUbRvEfObbbAcBmJhtODHjfejbLoe/ms3na34XEt95rKChiPRc+MDgXsOIxMU5M1JezpwSSTEzRh1EgT+DhQWBn5sXdLJpVs2outWlEckHn0MUcI8Ae2JMCOhaleCJbGzSvaAEh4LU9Jp+aFLKjSqXKo5Z4N+A="; 
+    const CONFIG_RANGE = "工作表1!A:ZZ"; 
+    // 🚀 請在此貼上您的 Google Apps Script 網頁應用程式部署 URL (Web App URL)
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby7sU7gz5mCfFSWbTS0TjkfpqeKxQgAZZwKSBwlz-gJE56hrIzFo5l1--w1-VbnsAE/exec";
-    // ==========================================
+    // =========================================================================
 
     let globalData = [];
     let currentFilteredData = [];     
@@ -330,19 +286,47 @@
       'Q.中繼光纜擴充': '#085041', 'E.共同管道': '#639922', 'L.配合行動基地台': '#888780'
     };
 
-    async function fetchCloudSheetsData() {
-      if (CONFIG.API_KEY.includes("請在此處貼上")) {
-        document.getElementById('loading-indicator').innerHTML = `⚠️ <b>參數尚未設定完成</b>：請先在 HTML 原始碼中修改 <code>CONFIG.API_KEY</code> 填入您的 GCP 金鑰。`;
+    // 核心解密程序
+    async function initSecureConnection() {
+      const password = prompt("🔐 請輸入網頁瀏覽密碼：");
+      if (!password) {
+        document.getElementById('loading-indicator').innerHTML = `❌ <b>拒絕存取</b>：必須輸入密碼才能檢視工程資訊。`;
         return;
       }
-      const encodedRange = encodeURIComponent(CONFIG.RANGE);
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SPREADSHEET_ID}/values/${encodedRange}?key=${CONFIG.API_KEY}`;
+
+      try {
+        const textEncoder = new TextEncoder();
+        const combined = new Uint8Array(atob(ENCRYPTED_CONFIG).split("").map(c => c.charCodeAt(0)));
+        const salt = combined.slice(0, 16);
+        const iv = combined.slice(16, 28);
+        const encryptedData = combined.slice(28);
+
+        const keyMaterial = await window.crypto.subtle.importKey("raw", textEncoder.encode(password), "PBKDF2", false, ["deriveBits", "deriveKey"]);
+        const key = await window.crypto.subtle.deriveKey({ name: "PBKDF2", salt: salt, iterations: 10000, hash: "SHA-256" }, keyMaterial, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+        const decryptedDecoded = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, encryptedData);
+        
+        const decryptedText = new TextDecoder().decode(decryptedDecoded);
+        if (!decryptedText) throw new Error("解密無效。");
+        const realConfig = JSON.parse(decryptedText);
+        
+        await fetchCloudSheetsData(realConfig.SPREADSHEET_ID, realConfig.API_KEY);
+      } catch (err) {
+        console.error(err);
+        document.getElementById('loading-indicator').innerHTML = `❌ <b>驗證失敗</b>：密碼錯誤，無法解密安全金鑰。`;
+        document.getElementById('loading-indicator').style.background = "var(--color-background-danger)";
+        document.getElementById('loading-indicator').style.color = "var(--color-text-danger)";
+      }
+    }
+
+    async function fetchCloudSheetsData(spreadsheetId, apiKey) {
+      document.getElementById('loading-indicator').innerText = "🔄 密碼驗證成功！載入最新...";
+      const encodedRange = encodeURIComponent(CONFIG_RANGE);
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodedRange}?key=${apiKey}`;
 
       try {
         const response = await fetch(url);
         const json = await response.json();
         if (json.error) throw new Error(json.error.message);
-        if (!json.values || json.values.length === 0) throw new Error("試算表內查無列資料。");
 
         const headers = json.values[0].map(h => h ? String(h).trim() : '');
         const rows = json.values.slice(1);
@@ -380,16 +364,15 @@
             loc: getCell(idxLoc),
             rd1Note: getCell(idxRd1Note) || '---',         
             bureau: getCell(idxBureau) || '未知區域',
-            manualNote: getCell(idxManualNote) || '',
+            manualNote: getCell(idxManualNote) || '', 
             civilOk: getCell(idxCivilOk) || '' 
           };
         });
 
         document.getElementById('loading-indicator').style.display = 'none';
         calculateAndRenderDashboard();
-
       } catch (error) {
-        document.getElementById('loading-indicator').innerHTML = `❌ <b>雲端連線失敗</b>：${error.message}`;
+        document.getElementById('loading-indicator').innerHTML = `❌ <b>資料同步失敗</b>：無法從試算表下載內容 (${error.message})`;
       }
     }
 
@@ -412,59 +395,35 @@
         document.getElementById('m-delayed-jobs').innerText = delayedJobs.toLocaleString();
         document.getElementById('m-pending-jobs').innerText = pendingJobs.toLocaleString();
 
-        const engNoMap = {};
-        globalData.forEach(d => { if (!engNoMap[d.engNo]) engNoMap[d.engNo] = 0; engNoMap[d.engNo]++; });
+        const engNoMap = {}; globalData.forEach(d => { if (!engNoMap[d.engNo]) engNoMap[d.engNo] = 0; engNoMap[d.engNo]++; });
         const engNoSorted = Object.entries(engNoMap).sort((a, b) => b[1] - a[1]);
 
         const budgetMap = {};
         globalData.forEach(d => {
           if (!budgetMap[d.budget]) budgetMap[d.budget] = { count: 0, points: 0 };
-          budgetMap[d.budget].count++;
-          budgetMap[d.budget].points += d.points;
+          budgetMap[d.budget].count++; budgetMap[d.budget].points += d.points;
         });
         const budgetSorted = Object.entries(budgetMap).sort((a, b) => b[1].count - a[1].count);
 
-        const budgetBarsEl = document.getElementById('budget-bars');
-        budgetBarsEl.innerHTML = '';
+        const budgetBarsEl = document.getElementById('budget-bars'); budgetBarsEl.innerHTML = '';
         const maxBudgetCount = budgetSorted[0] ? budgetSorted[0][1].count : 1;
         budgetSorted.forEach(([name, info]) => {
           const pct = (info.count / maxBudgetCount) * 100;
-          budgetBarsEl.innerHTML += `
-            <div class="bar-row" data-budget="${name}">
-              <span class="bar-label" title="${name}">${name}</span>
-              <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${budgetColors[name] || '#888780'}"></div></div>
-              <span class="bar-count">${info.count} 案</span>
-            </div>`;
+          budgetBarsEl.innerHTML += `<div class="bar-row" data-budget="${name}"><span class="bar-label" title="${name}">${name}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${budgetColors[name] || '#888780'}"></div></div><span class="bar-count">${info.count} 案</span></div>`;
         });
 
-        const bureauMap = {};
-        globalData.forEach(d => {
-          let name = d.bureau.replace('雲林', '').trim();
-          if (!bureauMap[name]) bureauMap[name] = 0;
-          bureauMap[name]++;
-        });
+        const bureauMap = {}; globalData.forEach(d => { let name = d.bureau.replace('雲林', '').trim(); if (!bureauMap[name]) bureauMap[name] = 0; bureauMap[name]++; });
         const bureauSorted = Object.entries(bureauMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
-        const bureauBarsEl = document.getElementById('bureau-bars');
-        bureauBarsEl.innerHTML = '';
+        const bureauBarsEl = document.getElementById('bureau-bars'); bureauBarsEl.innerHTML = '';
         const maxBureauCount = bureauSorted[0] ? bureauSorted[0][1] : 1;
         bureauSorted.forEach(([name, count]) => {
           const pct = (count / maxBureauCount) * 100;
-          bureauBarsEl.innerHTML += `
-            <div class="bar-row" data-bureau="${name}">
-              <span class="bar-label" title="${name}">${name}</span>
-              <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:#378ADD"></div></div>
-              <span class="bar-count">${count} 案</span>
-            </div>`;
+          bureauBarsEl.innerHTML += `<div class="bar-row" data-bureau="${name}"><span class="bar-label" title="${name}">${name}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:#378ADD"></div></div><span class="bar-count">${count} 案</span></div>`;
         });
 
-        const desMap = {};
-        globalData.forEach(d => {
-          if (!desMap[d.designer]) desMap[d.designer] = { count: 0, points: 0 };
-          desMap[d.designer].count++;
-          desMap[d.designer].points += d.points;
-        });
+        const desMap = {}; globalData.forEach(d => { if (!desMap[d.designer]) desMap[d.designer] = { count: 0, points: 0 }; desMap[d.designer].count++; desMap[d.designer].points += d.points; });
         const desSorted = Object.entries(desMap).sort((a, b) => b[1].count - a[1].count);
-        const desBarsEl = document.getElementById('designer-bars');
+        const desBarsEl = document.getElementById('designer-bars'); 
         desBarsEl.innerHTML = '';
         desBarsEl.style.display = 'grid';
         desBarsEl.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
@@ -473,33 +432,21 @@
         const palette = ['#378ADD', '#7F77DD', '#1D9E75', '#BA7517', '#D85A30', '#D4537E'];
         desSorted.forEach(([name, info], idx) => {
           const pct = (info.count / maxDesCount) * 100;
-          desBarsEl.innerHTML += `
-            <div class="bar-row" style="background:var(--color-background-secondary); padding: 6px 10px; border-radius:6px; border:0.5px solid var(--color-border-tertiary); width:100%;">
-              <span class="bar-label" style="width:65px; min-width:65px; font-weight:600">${name}</span>
-              <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${palette[idx % palette.length]}"></div></div>
-              <span class="bar-count" style="width:50px">${info.count} 件</span>
-              <span style="font-size:11px;color:var(--color-text-tertiary);width:75px;text-align:right;font-family:monospace">${Math.round(info.points).toLocaleString()} 點</span>
-            </div>`;
+          desBarsEl.innerHTML += `<div class="bar-row" style="background:var(--color-background-secondary); padding: 6px 10px; border-radius:6px; border:0.5px solid var(--color-border-tertiary); width:100%;"><span class="bar-label" style="width:65px; min-width:65px; font-weight:600">${name}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${palette[idx % palette.length]}"></div></div><span class="bar-count" style="width:50px">${info.count} 件</span><span style="font-size:11px;color:var(--color-text-tertiary);width:75px;text-align:right;font-family:monospace">${Math.round(info.points).toLocaleString()} 點</span></div>`;
         });
 
         if (statusChartInstance) statusChartInstance.destroy();
         statusChartInstance = new Chart(document.getElementById('statusChart'), {
           type: 'doughnut',
-          data: {
-            labels: ['尚未回報/施工中', '已完工', '未完工擇日續'],
-            datasets: [{ data: [pendingJobs, completedJobs, delayedJobs], backgroundColor: ['#888780', '#1D9E75', '#BA7517'], borderWidth: 0 }]
-          },
-          options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => ` ${c.label}: ${c.raw.toLocaleString()} 件` } } } }
+          data: { labels: ['尚未回報/施工中', '已完工', '未完工擇日續'], datasets: [{ data: [pendingJobs, completedJobs, delayedJobs], backgroundColor: ['#888780', '#1D9E75', '#BA7517'], borderWidth: 0 }] },
+          options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false } } }
         });
 
         if (pointsChartInstance) pointsChartInstance.destroy();
         const topBudgetsForChart = budgetSorted.slice(0, 6);
         pointsChartInstance = new Chart(document.getElementById('pointsChart'), {
           type: 'bar',
-          data: {
-            labels: topBudgetsForChart.map(([name]) => name.substring(0, 5)),
-            datasets: [{ data: topBudgetsForChart.map(([, info]) => (info.points / 10000).toFixed(1)), backgroundColor: topBudgetsForChart.map(([name]) => budgetColors[name] || '#888780'), borderWidth: 0 }]
-          },
+          data: { labels: topBudgetsForChart.map(([name]) => name.substring(0, 5)), datasets: [{ data: topBudgetsForChart.map(([, info]) => (info.points / 10000).toFixed(1)), backgroundColor: topBudgetsForChart.map(([name]) => budgetColors[name] || '#888780'), borderWidth: 0 }] },
           options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v + ' 萬' } } } }
         });
 
@@ -523,7 +470,7 @@
 
         renderTable();
       } catch (chartErr) {
-        console.warn("元件初始化微幅延遲，不影響清單瀏覽：", chartErr);
+        console.warn("圖表加載微幅延遲，不影響清單檢視：", chartErr);
       }
     }
 
@@ -558,60 +505,47 @@
 
       document.getElementById('budget-bars').addEventListener('click', e => {
         const row = e.target.closest('.bar-row'); if (!row) return;
-        const target = row.dataset.budget;
-        if (selectedBudgets.has(target)) selectedBudgets.delete(target); else selectedBudgets.add(target);
+        const target = row.dataset.budget; if (selectedBudgets.has(target)) selectedBudgets.delete(target); else selectedBudgets.add(target);
         renderTable();
       });
       document.getElementById('bureau-bars').addEventListener('click', e => {
         const row = e.target.closest('.bar-row'); if (!row) return;
-        const target = row.dataset.bureau;
-        if (selectedBureaus.has(target)) selectedBureaus.delete(target); else selectedBureaus.add(target);
+        const target = row.dataset.bureau; if (selectedBureaus.has(target)) selectedBureaus.delete(target); else selectedBureaus.add(target);
         renderTable(); 
       });
 
-      document.getElementById('txt-search').addEventListener('input', e => {
-        textSearchQuery = e.target.value.toLowerCase().trim();
-        renderTable();
-      });
+      document.getElementById('txt-search').addEventListener('input', e => { textSearchQuery = e.target.value.toLowerCase().trim(); renderTable(); });
 
       document.getElementById('filter-engno-toggle-btns').addEventListener('click', e => {
         const btn = e.target.closest('.filter-btn'); if (!btn) return;
-        const target = btn.dataset.engno;
-        if (target === 'all') selectedEngNos.clear();
-        else { if (selectedEngNos.has(target)) selectedEngNos.delete(target); else selectedEngNos.add(target); }
+        const target = btn.dataset.engno; if (target === 'all') selectedEngNos.clear(); else { if (selectedEngNos.has(target)) selectedEngNos.delete(target); else selectedEngNos.add(target); }
         renderTable();
       });
       document.getElementById('filter-budget-btns').addEventListener('click', e => {
         const btn = e.target.closest('.filter-btn'); if (!btn) return;
-        const target = btn.dataset.budget;
-        if (target === 'all') selectedBudgets.clear();
-        else { if (selectedBudgets.has(target)) selectedBudgets.delete(target); else selectedBudgets.add(target); }
+        const target = btn.dataset.budget; if (target === 'all') selectedBudgets.clear(); else { if (selectedBudgets.has(target)) selectedBudgets.delete(target); else selectedBudgets.add(target); }
         renderTable();
       });
       document.getElementById('filter-designer-toggle-btns').addEventListener('click', e => {
         const btn = e.target.closest('.filter-btn'); if (!btn) return;
-        const target = btn.dataset.designer;
-        if (target === 'all') selectedDesigners.clear();
-        else { if (selectedDesigners.has(target)) selectedDesigners.delete(target); else selectedDesigners.add(target); }
+        const target = btn.dataset.designer; if (target === 'all') selectedDesigners.clear(); else { if (selectedDesigners.has(target)) selectedDesigners.delete(target); else selectedDesigners.add(target); }
         renderTable();
       });
       document.getElementById('filter-status-btns').addEventListener('click', e => {
         const btn = e.target.closest('.filter-btn'); if (!btn) return;
-        const target = btn.dataset.status;
-        if (target === 'all') selectedStatuses.clear();
-        else { if (selectedStatuses.has(target)) selectedStatuses.delete(target); else selectedStatuses.add(target); }
+        const target = btn.dataset.status; if (target === 'all') selectedStatuses.clear(); else { if (selectedStatuses.has(target)) selectedStatuses.delete(target); else selectedStatuses.add(target); }
         renderTable();
       });
     }
 
-    // 🚀 備註非同步即時回寫 Google Sheets 核心 API
+    // 🚀 備註異步即時同步 API
     async function saveManualNote(id) {
       const noteInput = document.getElementById(`note-${id}`);
       const saveBtn = document.getElementById(`save-btn-${id}`);
       if (!noteInput) return;
       
       const noteValue = noteInput.value.trim();
-      if (APPS_SCRIPT_URL.includes("xxxx")) { alert("請先在 HTML 原始碼中配置正確的 APPS_SCRIPT_URL！"); return; }
+      if (APPS_SCRIPT_URL.includes("xxxx")) { alert("請先填寫您的 Google Apps Script 部署 URL！"); return; }
       
       saveBtn.innerText = "⏳ 寫入";
       saveBtn.disabled = true;
@@ -625,6 +559,7 @@
           saveBtn.innerText = "✅ 成功";
           saveBtn.style.background = "var(--color-border-success)";
           
+          // 更新本地記憶體
           const targetObj = globalData.find(d => d.id === id);
           if (targetObj) targetObj.manualNote = noteValue;
           
@@ -638,7 +573,7 @@
           saveBtn.innerText = "儲存"; saveBtn.disabled = false;
         }
       } catch (err) {
-        alert("網路連線失敗，請確認 GAS 是否設定為所有人可存取：" + err.message);
+        alert("連線異常，請確認 GAS 是否已設定為「所有人」存取：" + err.message);
         saveBtn.innerText = "儲存"; saveBtn.disabled = false;
       }
     }
@@ -687,23 +622,11 @@
 
     function syncFilterUIStyles() {
       document.querySelectorAll('#budget-bars .bar-row').forEach(row => { row.classList.toggle('active', selectedBudgets.has(row.dataset.budget)); });
-      document.querySelectorAll('#filter-budget-btns .filter-btn').forEach(btn => {
-        if (btn.dataset.budget === 'all') btn.classList.toggle('active', selectedBudgets.size === 0);
-        else btn.classList.toggle('active', selectedBudgets.has(btn.dataset.budget));
-      });
+      document.querySelectorAll('#filter-budget-btns .filter-btn').forEach(btn => { if (btn.dataset.budget === 'all') btn.classList.toggle('active', selectedBudgets.size === 0); else btn.classList.toggle('active', selectedBudgets.has(btn.dataset.budget)); });
       document.querySelectorAll('#bureau-bars .bar-row').forEach(row => { row.classList.toggle('active', selectedBureaus.has(row.dataset.bureau)); });
-      document.querySelectorAll('#filter-engno-toggle-btns .filter-btn').forEach(btn => {
-        if (btn.dataset.engno === 'all') btn.classList.toggle('active', selectedEngNos.size === 0);
-        else btn.classList.toggle('active', selectedEngNos.has(btn.dataset.engno));
-      });
-      document.querySelectorAll('#filter-designer-toggle-btns .filter-btn').forEach(btn => {
-        if (btn.dataset.designer === 'all') btn.classList.toggle('active', selectedDesigners.size === 0);
-        else btn.classList.toggle('active', selectedDesigners.has(btn.dataset.designer));
-      });
-      document.querySelectorAll('#filter-status-btns .filter-btn').forEach(btn => {
-        if (btn.dataset.status === 'all') btn.classList.toggle('active', selectedStatuses.size === 0);
-        else btn.classList.toggle('active', selectedStatuses.has(btn.dataset.status));
-      });
+      document.querySelectorAll('#filter-engno-toggle-btns .filter-btn').forEach(btn => { if (btn.dataset.engno === 'all') btn.classList.toggle('active', selectedEngNos.size === 0); else btn.classList.toggle('active', selectedEngNos.has(btn.dataset.engno)); });
+      document.querySelectorAll('#filter-designer-toggle-btns .filter-btn').forEach(btn => { if (btn.dataset.designer === 'all') btn.classList.toggle('active', selectedDesigners.size === 0); else btn.classList.toggle('active', selectedDesigners.has(btn.dataset.designer)); });
+      document.querySelectorAll('#filter-status-btns .filter-btn').forEach(btn => { if (btn.dataset.status === 'all') btn.classList.toggle('active', selectedStatuses.size === 0); else btn.classList.toggle('active', selectedStatuses.has(btn.dataset.status)); });
     }
 
     function renderTable() {
@@ -716,7 +639,7 @@
       const todayNum = parseInt(`${minguoYear}${mm}${dd}`, 10);
 
       currentFilteredData = globalData.filter(d => {
-        // 🚀 【全新加固功能】：定義一個隱藏判定，若該工單備註欄有內容，則附加「有備註 已備註」關鍵字
+        // 🚀 【動態備註過濾核心】：判定若手動備註欄有內容，則附加「有備註 已備註」關鍵字
         const hasManualNoteText = (d.manualNote && d.manualNote.trim() !== "") ? "已備註 有備註" : "";
 
         const matchesText = (textSearchQuery === '') ||
@@ -728,10 +651,10 @@
           d.budget.toLowerCase().includes(textSearchQuery) ||
           d.loc.toLowerCase().includes(textSearchQuery) ||
           d.rd1Note.toLowerCase().includes(textSearchQuery) || 
-          d.manualNote.toLowerCase().includes(textSearchQuery) || 
-          d.civilOk.toLowerCase().includes(textSearchQuery) || 
+          d.manualNote.toLowerCase().includes(textSearchQuery) || // 模糊搜尋支援手動備註文字
+          d.civilOk.toLowerCase().includes(textSearchQuery) ||    // 模糊搜尋支援土木ok
           d.bureau.toLowerCase().includes(textSearchQuery) ||
-          // 🚀 將此隱藏欄位文字同步打入模糊搜尋池，使其支援輸入關鍵字直接連動過濾
+          // 🚀 將此動態關鍵字打入模糊搜尋比對池中
           hasManualNoteText.includes(textSearchQuery);
 
         const matchesEngNo = (selectedEngNos.size === 0) || selectedEngNos.has(d.engNo);
@@ -740,14 +663,9 @@
 
         let normStatus = 'pending';
         const estNum = parseInt(d.estComplete, 10);
-
-        if (d.status.includes('1.已完工')) {
-          normStatus = 'completed';
-        } else if (!isNaN(estNum) && todayNum > estNum) {
-          normStatus = 'overdue';  
-        } else if (d.status.includes('3.未完工擇日')) {
-          normStatus = 'delayed';
-        }
+        if (d.status.includes('1.已完工')) normStatus = 'completed';
+        else if (!isNaN(estNum) && todayNum > estNum) normStatus = 'overdue';  
+        else if (d.status.includes('3.未完工擇日')) normStatus = 'delayed';
         
         const matchesStatus = (selectedStatuses.size === 0) || selectedStatuses.has(normStatus);
         let bName = d.bureau.replace('雲林', '').trim();
@@ -760,20 +678,13 @@
         document.getElementById('filter-count').innerText = `${currentFilteredData.length.toLocaleString()} 件篩選工單`;
       }
 
-      let subCompleted = 0;
-      let subDelayed = 0;
-      let subPending = 0;
-
+      let subCompleted = 0, subDelayed = 0, subPending = 0;
       currentFilteredData.forEach(d => {
-        if (d.status.includes('1.已完工')) {
-          subCompleted++;
-        } else if (d.status.includes('3.未完工擇日')) {
-          subDelayed++;
-        } else {
-          subPending++;
-        }
+        if (d.status.includes('1.已完工')) subCompleted++;
+        else if (d.status.includes('3.未完工擇日')) subDelayed++;
+        else subPending++;
       });
-
+      
       if(document.getElementById('leg-pending')) {
         document.getElementById('leg-pending').innerText = subPending.toLocaleString();
         document.getElementById('leg-completed').innerText = subCompleted.toLocaleString();
@@ -793,11 +704,11 @@
         <tr>
           <td style="font-family:monospace;font-size:13px;font-weight:600;color:var(--color-text-info)">${d.engNo}</td>
           <td style="font-family:monospace;font-size:13px;font-weight:500;color:var(--color-text-secondary)">${d.id}</td>
-          <td style="font-size:14px">${d.designer}</td>
+          <td>${d.designer}</td>
           <td style="font-family:monospace;font-size:13px;color:var(--color-text-secondary)">${d.handover}</td>
           <td style="font-family:monospace;font-size:13px;color:var(--color-text-secondary)">${d.estComplete}</td>
           <td style="font-size:13px;color:var(--color-text-secondary)">${d.budget}</td>
-          <td style="text-align:right;font-weight:500;font-family:monospace;font-size:13px">${Math.round(d.points).toLocaleString()}</td>
+          <td style="text-align:right;font-weight:500;font-family:monospace;font-size:13px;">${Math.round(d.points).toLocaleString()}</td>
           <td style="text-align:center">${statusTag(d.status, d.estComplete, todayNum)}</td>
           
           <td style="text-align:center">
@@ -839,9 +750,7 @@
     }
 
     function exportFilteredTableToCSV() {
-      if (!currentFilteredData || currentFilteredData.length === 0) {
-        alert("目前沒有任何匹配的工單資料可以導出！"); return;
-      }
+      if (!currentFilteredData || currentFilteredData.length === 0) { alert("目前沒有任何數據可以導出！"); return; }
       const headers = ["工程編號", "工作單流水號", "設計員", "交商日期", "預完日期", "預算動支別", "交商積點數", "回報狀態", "土木ok", "手動備註", "施工地點", "RD1備註", "交換局名"];
       let csvString = "\ufeff" + headers.join(",") + "\n";
 
@@ -853,7 +762,7 @@
 
       currentFilteredData.forEach(d => {
         let textStatus = '施工中';
-        if (d.status.includes('1.現已完工') || d.status.includes('1.已完工')) textStatus = '已完工';
+        if (d.status.includes('1.已完工')) textStatus = '已完工';
         else {
           let baseText = d.status.includes('3.未完工擇日') ? '擇日續工' : '施工中';
           const estNum = parseInt(d.estComplete, 10);
@@ -878,7 +787,7 @@
       downloadLink.click(); document.body.removeChild(downloadLink);
     }
 
-    window.addEventListener('DOMContentLoaded', fetchCloudSheetsData);
+    window.addEventListener('DOMContentLoaded', initSecureConnection);
   </script>
 </body>
 </html>
