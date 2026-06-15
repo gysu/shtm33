@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>電信工程施工進度_v2.3</title>
+  <title>電信工程施工進度_v2.4</title>
   <style id="mcp-host-fonts">
     @font-face {
       font-family: "Anthropic Sans";
@@ -90,9 +90,9 @@
     .search-input-box { width: 100%; max-width: 480px; height: 36px; padding: 8px 12px; font-size: 13px; background: var(--color-background-primary); color: var(--color-text-primary); border: 0.5px solid var(--color-border-primary, rgba(0,0,0,0.4)); border-radius: var(--border-radius-md); outline: none; transition: all 0.15s ease; margin-bottom: 1rem; }
     .search-input-box:focus { border-color: var(--color-border-info); box-shadow: 0 0 0 3px var(--color-background-info); }
 
-    /* 表格容器優化與寬度自適應微調 */
+    /* 表格容器優化與寬度自適應微調（總寬度完美錨定 1660px，不擠壓、不移位） */
     .table-container { overflow-x: auto; background: var(--color-background-primary); border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); }
-    #detail-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; min-width: 1620px; }
+    #detail-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; min-width: 1660px; }
     #detail-table th { text-align: left; padding: 8px; border-bottom: 0.5px solid var(--color-border-secondary); color: var(--color-text-secondary); font-weight: 500; background: var(--color-background-secondary); }
     #detail-table td { padding: 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #detail-table tr:hover td { background: var(--color-background-secondary); }
@@ -237,11 +237,11 @@
           <tr>
             <th style="width:110px">工程編號</th>
             <th style="width:100px">工作單流水號</th>
-            <th style="width:70px">設計員</th>
+            <th style="width:75px">設計員</th>
             <th style="width:85px">交商日期</th>
             <th style="width:85px">預完日期</th>
             <th style="width:150px">預算動支別</th>
-            <th style="width:70px;text-align:right">交商積點</th>
+            <th style="width:75px;text-align:right">交商積點</th>
             <th style="width:130px;text-align:center">完工狀態</th>
             <th style="width:90px;text-align:center;background:var(--color-background-success);color:var(--color-text-success)">🏗️ 土木ok</th>
             <th style="width:200px">施工地點</th>
@@ -559,7 +559,6 @@
           saveBtn.innerText = "✅ 成功";
           saveBtn.style.background = "var(--color-border-success)";
           
-          // 更新本地記憶體
           const targetObj = globalData.find(d => d.id === id);
           if (targetObj) targetObj.manualNote = noteValue;
           
@@ -578,7 +577,7 @@
       }
     }
 
-    // 🚀 土木ok 非同步即時核取狀態回寫 Google Sheets API
+    // 🚀 土木ok 非同步即時核取狀態回寫 Google Sheets API（內嵌智慧時間戳記，不更動框架與版面）
     async function saveCivilStatus(id, isChecked) {
       const statusSpan = document.getElementById(`civil-status-${id}`);
       const checkbox = document.getElementById(`civil-${id}`);
@@ -590,7 +589,18 @@
       checkbox.disabled = true;
 
       try {
-        const civilValue = isChecked ? "OK" : "";
+        let civilValue = "";
+        if (isChecked) {
+          // 🚀 計算當前電信標準維運格式時間戳記 (YYYY-MM-DD HH:mm)
+          const now = new Date();
+          const yyyy = now.getFullYear();
+          const mm = String(now.getMonth() + 1).padStart(2, '0');
+          const dd = String(now.getDate()).padStart(2, '0');
+          const hh = String(now.getHours()).padStart(2, '0');
+          const min = String(now.getMinutes()).padStart(2, '0');
+          civilValue = `OK (${yyyy}-${mm}-${dd} ${hh}:${min})`;
+        }
+
         const fetchUrl = `${APPS_SCRIPT_URL}?id=${encodeURIComponent(id)}&civil=${encodeURIComponent(civilValue)}`;
         const response = await fetch(fetchUrl, { mode: 'cors' });
         const resJson = await response.json();
@@ -639,7 +649,7 @@
       const todayNum = parseInt(`${minguoYear}${mm}${dd}`, 10);
 
       currentFilteredData = globalData.filter(d => {
-        // 🚀 【動態備註過濾核心】：判定若手動備註欄有內容，則附加「有備註 已備註」關鍵字
+        // 定義一個隱藏判定，若該工單備註欄有內容，則附加「有備註 已備註」關鍵字
         const hasManualNoteText = (d.manualNote && d.manualNote.trim() !== "") ? "已備註 有備註" : "";
 
         const matchesText = (textSearchQuery === '') ||
@@ -651,11 +661,10 @@
           d.budget.toLowerCase().includes(textSearchQuery) ||
           d.loc.toLowerCase().includes(textSearchQuery) ||
           d.rd1Note.toLowerCase().includes(textSearchQuery) || 
-          d.manualNote.toLowerCase().includes(textSearchQuery) || // 模糊搜尋支援手動備註文字
-          d.civilOk.toLowerCase().includes(textSearchQuery) ||    // 模糊搜尋支援土木ok
+          d.manualNote.toLowerCase().includes(textSearchQuery) || 
+          d.civilOk.toLowerCase().includes(textSearchQuery) || 
           d.bureau.toLowerCase().includes(textSearchQuery) ||
-          // 🚀 將此動態關鍵字打入模糊搜尋比對池中
-          hasManualNoteText.includes(textSearchQuery);
+          hasManualNoteText.includes(textSearchQuery); // 注入模糊搜尋池
 
         const matchesEngNo = (selectedEngNos.size === 0) || selectedEngNos.has(d.engNo);
         const matchesBudget = (selectedBudgets.size === 0) || selectedBudgets.has(d.budget);
@@ -704,16 +713,16 @@
         <tr>
           <td style="font-family:monospace;font-size:13px;font-weight:600;color:var(--color-text-info)">${d.engNo}</td>
           <td style="font-family:monospace;font-size:13px;font-weight:500;color:var(--color-text-secondary)">${d.id}</td>
-          <td>${d.designer}</td>
+          <td style="font-size:14px;">${d.designer}</td>
           <td style="font-family:monospace;font-size:13px;color:var(--color-text-secondary)">${d.handover}</td>
           <td style="font-family:monospace;font-size:13px;color:var(--color-text-secondary)">${d.estComplete}</td>
           <td style="font-size:13px;color:var(--color-text-secondary)">${d.budget}</td>
-          <td style="text-align:right;font-weight:500;font-family:monospace;font-size:13px;">${Math.round(d.points).toLocaleString()}</td>
+          <td style="text-align:right;font-weight:500;font-family:monospace;font-size:13px">${Math.round(d.points).toLocaleString()}</td>
           <td style="text-align:center">${statusTag(d.status, d.estComplete, todayNum)}</td>
           
           <td style="text-align:center">
             <div style="display:flex; align-items:center; justify-content:center; gap:4px;">
-              <input type="checkbox" id="civil-${d.id}" style="width:16px; height:16px; cursor:pointer;" ${d.civilOk === 'OK' ? 'checked' : ''} onchange="saveCivilStatus('${d.id}', this.checked)">
+              <input type="checkbox" id="civil-${d.id}" style="width:16px; height:16px; cursor:pointer;" ${d.civilOk && d.civilOk.startsWith('OK') ? 'checked' : ''} onchange="saveCivilStatus('${d.id}', this.checked)">
               <span id="civil-status-${d.id}" style="font-size:11px;"></span>
             </div>
           </td>
@@ -762,7 +771,7 @@
 
       currentFilteredData.forEach(d => {
         let textStatus = '施工中';
-        if (d.status.includes('1.已完工')) textStatus = '已完工';
+        if (d.status.includes('1.開通已完工') || d.status.includes('1.已完工')) textStatus = '已完工';
         else {
           let baseText = d.status.includes('3.未完工擇日') ? '擇日續工' : '施工中';
           const estNum = parseInt(d.estComplete, 10);
