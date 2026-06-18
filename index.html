@@ -232,7 +232,14 @@
       <button class="filter-btn" data-status="drawing_uploaded">圖已上傳</button>
       <button class="filter-btn" data-status="drawing_not_uploaded">❌圖未上傳</button>
     </div>
-
+    <div class="filter-section-title">📋 欄位顯示管理 (平板/筆電推薦)：</div>
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="toggleColumn(4)">設計圖上傳</button>
+      <button class="filter-btn active" onclick="toggleColumn(7)">動支別</button>
+      <button class="filter-btn active" onclick="toggleColumn(11)">施工地點</button>
+      <button class="filter-btn active" onclick="toggleColumn(12)">RD1備註</button>
+      <button class="filter-btn active" onclick="toggleColumn(13)">交換局名</button>
+    </div>
     <div class="table-container">
       <table id="detail-table">
         <thead>
@@ -385,7 +392,22 @@
         document.getElementById('loading-indicator').innerHTML = `❌ <b>資料同步失敗</b>：無法從試算表下載內容 (${error.message})`;
       }
     }
+    function toggleColumn(colIndex) {
+      const table = document.getElementById('detail-table');
+      const rows = table.rows;
+      const btn = event.target;
 
+      // 切換按鈕樣式
+      btn.classList.toggle('active');
+
+      // 切換顯示/隱藏該直欄 (欄位索引從 1 開始)
+      for (let i = 0; i < rows.length; i++) {
+        const cell = rows[i].cells[colIndex - 1];
+        if (cell) {
+          cell.style.display = btn.classList.contains('active') ? '' : 'none';
+        }
+      }
+    }
     function calculateAndRenderDashboard() {
       setupFilterControlLogic();
       renderTable();
