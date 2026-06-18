@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>電信工程施工進度_v2.4</title>
+  <title>電信工程施工進度_v2.5</title>
   <style id="mcp-host-fonts">
     @font-face {
       font-family: "Anthropic Sans";
@@ -90,9 +90,9 @@
     .search-input-box { width: 100%; max-width: 480px; height: 36px; padding: 8px 12px; font-size: 13px; background: var(--color-background-primary); color: var(--color-text-primary); border: 0.5px solid var(--color-border-primary, rgba(0,0,0,0.4)); border-radius: var(--border-radius-md); outline: none; transition: all 0.15s ease; margin-bottom: 1rem; }
     .search-input-box:focus { border-color: var(--color-border-info); box-shadow: 0 0 0 3px var(--color-background-info); }
 
-    /* 表格容器優化與寬度自適應微調（總寬度完美錨定 1660px，不擠壓、不移位） */
+    /* 表格總寬度精確錨定在 1780px 確保橫向排列質感，完全防爆不擠壓跑位 */
     .table-container { overflow-x: auto; background: var(--color-background-primary); border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); }
-    #detail-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; min-width: 1660px; }
+    #detail-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; min-width: 1780px; }
     #detail-table th { text-align: left; padding: 8px; border-bottom: 0.5px solid var(--color-border-secondary); color: var(--color-text-secondary); font-weight: 500; background: var(--color-background-secondary); }
     #detail-table td { padding: 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #detail-table tr:hover td { background: var(--color-background-secondary); }
@@ -211,7 +211,7 @@
     </div>
     
     <div class="filter-section-title">🔍 智慧手動輸入篩選器：</div>
-    <input type="text" id="txt-search" class="search-input-box" placeholder="輸入工程編號、工單流水號、地點... (輸入「有備註」或「已備註」過濾出含有手動備註之工單)">
+    <input type="text" id="txt-search" class="search-input-box" placeholder="輸入工程編號、工單流水號... (輸入「未上傳」可篩選出未交圖工單；輸入「有備註」可篩選出已有備註之工單)">
 
     <div class="filter-section-title">🏗️ 工程編號篩選 (支援複選)：</div>
     <div class="filter-row" id="filter-engno-toggle-btns"></div>
@@ -229,6 +229,8 @@
       <button class="filter-btn" data-status="overdue">⚠️ 逾期</button>
       <button class="filter-btn" data-status="delayed">擇日續工</button>
       <button class="filter-btn" data-status="pending">施工/未回報</button>
+      <button class="filter-btn" data-status="drawing_uploaded">圖已上傳</button>
+      <button class="filter-btn" data-status="drawing_not_uploaded">❌圖未上傳</button>
     </div>
 
     <div class="table-container">
@@ -238,6 +240,7 @@
             <th style="width:110px">工程編號</th>
             <th style="width:100px">工作單流水號</th>
             <th style="width:75px">設計員</th>
+            <th style="width:120px;text-align:center;background:var(--color-background-info);color:var(--color-text-info)">設計圖上傳</th>
             <th style="width:85px">交商日期</th>
             <th style="width:85px">預完日期</th>
             <th style="width:150px">預算動支別</th>
@@ -344,6 +347,12 @@
         const idxBureau = headers.indexOf('交換局名');
         const idxManualNote = headers.indexOf('手動備註'); 
         const idxCivilOk = headers.indexOf('土木ok'); 
+        
+        // 🚀 精確尋找含有「設計圖」或「設計圖上傳」的欄位標頭
+        let idxDesignDrawing = headers.indexOf('設計圖上傳'); 
+        if (idxDesignDrawing === -1) {
+          idxDesignDrawing = headers.findIndex(h => h.includes('設計圖'));
+        }
 
         globalData = rows.map(row => {
           const getCell = (idx) => (idx !== -1 && idx < row.length && row[idx] !== undefined) ? String(row[idx]).trim() : '';
@@ -353,7 +362,7 @@
           if (isNaN(pts)) pts = 0;
 
           return {
-            engNo: getCell(idxEngNo) || '未編號',
+            engNo: getCell(idxEngNo),
             id: getCell(idxId),
             designer: getCell(idxDesigner) || '未指定',
             handover: getCell(idxHandover) || '---',       
@@ -364,8 +373,9 @@
             loc: getCell(idxLoc),
             rd1Note: getCell(idxRd1Note) || '---',         
             bureau: getCell(idxBureau) || '未知區域',
-            manualNote: getCell(idxManualNote) || '', 
-            civilOk: getCell(idxCivilOk) || '' 
+            manualNote: getCell(idxManualNote) || '',
+            civilOk: getCell(idxCivilOk) || '',
+            designDrawing: getCell(idxDesignDrawing) || ''
           };
         });
 
@@ -382,9 +392,9 @@
 
       try {
         const totalJobs = globalData.length;
-        const totalPoints = globalData.reduce((acc, curr) => acc + curr.points, 0);
-        const completedJobs = globalData.filter(d => d.status.includes('1.已完工')).length;
-        const delayedJobs = globalData.filter(d => d.status.includes('3.未完工擇日')).length;
+        const totalPoints = globalData.reduce((acc, curr) => acc + (curr.points || 0), 0);
+        const completedJobs = globalData.filter(d => (d.status || '').includes('1.已完工')).length;
+        const delayedJobs = globalData.filter(d => (d.status || '').includes('3.未完工擇日')).length;
         const pendingJobs = totalJobs - completedJobs - delayedJobs;
         const completedRate = totalJobs > 0 ? ((completedJobs / totalJobs) * 100).toFixed(1) : 0;
 
@@ -395,13 +405,16 @@
         document.getElementById('m-delayed-jobs').innerText = delayedJobs.toLocaleString();
         document.getElementById('m-pending-jobs').innerText = pendingJobs.toLocaleString();
 
-        const engNoMap = {}; globalData.forEach(d => { if (!engNoMap[d.engNo]) engNoMap[d.engNo] = 0; engNoMap[d.engNo]++; });
+        const engNoMap = {}; globalData.forEach(d => { if (d.engNo) { if (!engNoMap[d.engNo]) engNoMap[d.engNo] = 0; engNoMap[d.engNo]++; } });
         const engNoSorted = Object.entries(engNoMap).sort((a, b) => b[1] - a[1]);
 
         const budgetMap = {};
         globalData.forEach(d => {
-          if (!budgetMap[d.budget]) budgetMap[d.budget] = { count: 0, points: 0 };
-          budgetMap[d.budget].count++; budgetMap[d.budget].points += d.points;
+          if (d.budget) {
+            if (!budgetMap[d.budget]) budgetMap[d.budget] = { count: 0, points: 0 };
+            budgetMap[d.budget].count++;
+            budgetMap[d.budget].points += (d.points || 0);
+          }
         });
         const budgetSorted = Object.entries(budgetMap).sort((a, b) => b[1].count - a[1].count);
 
@@ -412,7 +425,7 @@
           budgetBarsEl.innerHTML += `<div class="bar-row" data-budget="${name}"><span class="bar-label" title="${name}">${name}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${budgetColors[name] || '#888780'}"></div></div><span class="bar-count">${info.count} 案</span></div>`;
         });
 
-        const bureauMap = {}; globalData.forEach(d => { let name = d.bureau.replace('雲林', '').trim(); if (!bureauMap[name]) bureauMap[name] = 0; bureauMap[name]++; });
+        const bureauMap = {}; globalData.forEach(d => { if (d.bureau) { let name = d.bureau.replace('雲林', '').trim(); if (!bureauMap[name]) bureauMap[name] = 0; bureauMap[name]++; } });
         const bureauSorted = Object.entries(bureauMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
         const bureauBarsEl = document.getElementById('bureau-bars'); bureauBarsEl.innerHTML = '';
         const maxBureauCount = bureauSorted[0] ? bureauSorted[0][1] : 1;
@@ -421,13 +434,12 @@
           bureauBarsEl.innerHTML += `<div class="bar-row" data-bureau="${name}"><span class="bar-label" title="${name}">${name}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:#378ADD"></div></div><span class="bar-count">${count} 案</span></div>`;
         });
 
-        const desMap = {}; globalData.forEach(d => { if (!desMap[d.designer]) desMap[d.designer] = { count: 0, points: 0 }; desMap[d.designer].count++; desMap[d.designer].points += d.points; });
+        const desMap = {}; globalData.forEach(d => { if (d.designer) { if (!desMap[d.designer]) desMap[d.designer] = { count: 0, points: 0 }; desMap[d.designer].count++; desMap[d.designer].points += (d.points || 0); } });
         const desSorted = Object.entries(desMap).sort((a, b) => b[1].count - a[1].count);
         const desBarsEl = document.getElementById('designer-bars'); 
         desBarsEl.innerHTML = '';
-        desBarsEl.style.display = 'grid';
-        desBarsEl.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
-        desBarsEl.style.gap = '8px';
+        desBarsEl.style.display = 'grid'; desBarsEl.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))'; desBarsEl.style.gap = '8px';
+
         const maxDesCount = desSorted[0] ? desSorted[0][1].count : 1;
         const palette = ['#378ADD', '#7F77DD', '#1D9E75', '#BA7517', '#D85A30', '#D4537E'];
         desSorted.forEach(([name, info], idx) => {
@@ -470,7 +482,7 @@
 
         renderTable();
       } catch (chartErr) {
-        console.warn("圖表加載微幅延遲，不影響清單檢視：", chartErr);
+        console.warn("圖表初始化微幅延遲，不影響清單瀏覽：", chartErr);
       }
     }
 
@@ -480,7 +492,7 @@
       document.getElementById('btn-toggle-budget').addEventListener('click', e => {
         const el = document.getElementById('budget-bars'); const btn = e.target;
         if (el.classList.contains('hide-board-engine')) { el.classList.remove('hide-board-engine'); btn.textContent = '📊 隱藏圖表'; btn.classList.remove('active'); } 
-        else { el.classList.add('hide-board-engine'); btn.textContent = '📊 顯示圖表'; btn.classList.add('active'); }
+        else { el.classList.remove('hide-board-engine'); btn.textContent = '📊 顯示圖表'; btn.classList.add('active'); }
       });
       document.getElementById('btn-toggle-bureau').addEventListener('click', e => {
         const el = document.getElementById('bureau-bars'); const btn = e.target;
@@ -538,105 +550,65 @@
       });
     }
 
-    // 🚀 備註異步即時同步 API
     async function saveManualNote(id) {
       const noteInput = document.getElementById(`note-${id}`);
       const saveBtn = document.getElementById(`save-btn-${id}`);
       if (!noteInput) return;
-      
       const noteValue = noteInput.value.trim();
-      if (APPS_SCRIPT_URL.includes("xxxx")) { alert("請先填寫您的 Google Apps Script 部署 URL！"); return; }
-      
-      saveBtn.innerText = "⏳ 寫入";
-      saveBtn.disabled = true;
-
+      if (APPS_SCRIPT_URL.includes("xxxx")) { alert("請先在 HTML 原始碼中配置正確的 APPS_SCRIPT_URL！"); return; }
+      saveBtn.innerText = "⏳ 寫入"; saveBtn.disabled = true;
       try {
         const fetchUrl = `${APPS_SCRIPT_URL}?id=${encodeURIComponent(id)}&note=${encodeURIComponent(noteValue)}`;
-        const response = await fetch(fetchUrl, { mode: 'cors' });
-        const resJson = await response.json();
-
+        const response = await fetch(fetchUrl, { mode: 'cors' }); const resJson = await response.json();
         if (resJson.status === 'success') {
-          saveBtn.innerText = "✅ 成功";
-          saveBtn.style.background = "var(--color-border-success)";
-          
-          const targetObj = globalData.find(d => d.id === id);
-          if (targetObj) targetObj.manualNote = noteValue;
-          
-          setTimeout(() => {
-            saveBtn.innerText = "儲存";
-            saveBtn.style.background = "var(--color-background-info)";
-            saveBtn.disabled = false;
-          }, 1200);
-        } else {
-          alert("寫入失敗：" + resJson.message);
-          saveBtn.innerText = "儲存"; saveBtn.disabled = false;
-        }
-      } catch (err) {
-        alert("連線異常，請確認 GAS 是否已設定為「所有人」存取：" + err.message);
-        saveBtn.innerText = "儲存"; saveBtn.disabled = false;
-      }
+          saveBtn.innerText = "✅ 成功"; saveBtn.style.background = "var(--color-border-success)";
+          const targetObj = globalData.find(d => d.id === id); if (targetObj) targetObj.manualNote = noteValue;
+          setTimeout(() => { saveBtn.innerText = "儲存"; saveBtn.style.background = "var(--color-background-info)"; saveBtn.disabled = false; }, 1200);
+        } else { alert("寫入失敗：" + resJson.message); saveBtn.innerText = "儲存"; saveBtn.disabled = false; }
+      } catch (err) { alert("網路連線失敗：" + err.message); saveBtn.innerText = "儲存"; saveBtn.disabled = false; }
     }
 
-    // 🚀 土木ok 非同步即時核取狀態回寫 Google Sheets API（內嵌智慧時間戳記，不更動框架與版面）
     async function saveCivilStatus(id, isChecked) {
-      const statusSpan = document.getElementById(`civil-status-${id}`);
-      const checkbox = document.getElementById(`civil-${id}`);
+      const statusSpan = document.getElementById(`civil-status-${id}`); const checkbox = document.getElementById(`civil-${id}`);
       if (!statusSpan || !checkbox) return;
-      
       if (APPS_SCRIPT_URL.includes("xxxx")) { alert("請先在 HTML 原始碼中配置正確的 APPS_SCRIPT_URL！"); return; }
-      
-      statusSpan.innerText = "⏳";
-      checkbox.disabled = true;
-
+      statusSpan.innerText = "⏳"; checkbox.disabled = true;
       try {
         let civilValue = "";
         if (isChecked) {
-          // 🚀 計算當前電信標準維運格式時間戳記 (YYYY-MM-DD HH:mm)
-          const now = new Date();
-          const yyyy = now.getFullYear();
-          const mm = String(now.getMonth() + 1).padStart(2, '0');
-          const dd = String(now.getDate()).padStart(2, '0');
-          const hh = String(now.getHours()).padStart(2, '0');
-          const min = String(now.getMinutes()).padStart(2, '0');
+          const now = new Date(); const yyyy = now.getFullYear(); const mm = String(now.getMonth() + 1).padStart(2, '0');
+          const dd = String(now.getDate()).padStart(2, '0'); const hh = String(now.getHours()).padStart(2, '0'); const min = String(now.getMinutes()).padStart(2, '0');
           civilValue = `OK (${yyyy}-${mm}-${dd} ${hh}:${min})`;
         }
-
         const fetchUrl = `${APPS_SCRIPT_URL}?id=${encodeURIComponent(id)}&civil=${encodeURIComponent(civilValue)}`;
-        const response = await fetch(fetchUrl, { mode: 'cors' });
-        const resJson = await response.json();
-
+        const response = await fetch(fetchUrl, { mode: 'cors' }); const resJson = await response.json();
         if (resJson.status === 'success') {
-          statusSpan.innerText = "✅";
-          statusSpan.style.color = "var(--color-text-success)";
-          
-          const targetObj = globalData.find(d => d.id === id);
-          if (targetObj) targetObj.civilOk = civilValue;
-          
-          setTimeout(() => {
-            statusSpan.innerText = "";
-            checkbox.disabled = false;
-          }, 1000);
-        } else {
-          alert("寫入失敗：" + resJson.message);
-          statusSpan.innerText = "❌";
-          checkbox.checked = !isChecked; // 還原前次勾選狀態
-          checkbox.disabled = false;
-        }
-      } catch (err) {
-        alert("網路連線失敗，請確認 GAS 權限開通配置：" + err.message);
-        statusSpan.innerText = "❌";
-        checkbox.checked = !isChecked; // 還原前次勾選狀態
-        checkbox.disabled = false;
-      }
+          statusSpan.innerText = "✅"; statusSpan.style.color = "var(--color-text-success)";
+          const targetObj = globalData.find(d => d.id === id); if (targetObj) targetObj.civilOk = civilValue;
+          setTimeout(() => { statusSpan.innerText = ""; checkbox.disabled = false; }, 1000);
+        } else { alert("寫入失敗：" + resJson.message); statusSpan.innerText = "❌"; checkbox.checked = !isChecked; checkbox.disabled = false; }
+      } catch (err) { alert("網路連線失敗：" + err.message); statusSpan.innerText = "❌"; checkbox.checked = !isChecked; checkbox.disabled = false; }
     }
 
     function syncFilterUIStyles() {
       document.querySelectorAll('#budget-bars .bar-row').forEach(row => { row.classList.toggle('active', selectedBudgets.has(row.dataset.budget)); });
-      document.querySelectorAll('#filter-budget-btns .filter-btn').forEach(btn => { if (btn.dataset.budget === 'all') btn.classList.toggle('active', selectedBudgets.size === 0); else btn.classList.toggle('active', selectedBudgets.has(btn.dataset.budget)); });
+      document.querySelectorAll('#filter-budget-btns .filter-btn').forEach(btn => {
+        if (btn.dataset.budget === 'all') btn.classList.toggle('active', selectedBudgets.size === 0);
+        else btn.classList.toggle('active', selectedBudgets.has(btn.dataset.budget));
+      });
       document.querySelectorAll('#bureau-bars .bar-row').forEach(row => { row.classList.toggle('active', selectedBureaus.has(row.dataset.bureau)); });
-      document.querySelectorAll('#filter-engno-toggle-btns .filter-btn').forEach(btn => { if (btn.dataset.engno === 'all') btn.classList.toggle('active', selectedEngNos.size === 0); else btn.classList.toggle('active', selectedEngNos.has(btn.dataset.engno)); });
-      document.querySelectorAll('#filter-designer-toggle-btns .filter-btn').forEach(btn => { if (btn.dataset.designer === 'all') btn.classList.toggle('active', selectedDesigners.size === 0); else btn.classList.toggle('active', selectedDesigners.has(btn.dataset.designer)); });
-      document.querySelectorAll('#filter-status-btns .filter-btn').forEach(btn => { if (btn.dataset.status === 'all') btn.classList.toggle('active', selectedStatuses.size === 0); else btn.classList.toggle('active', selectedStatuses.has(btn.dataset.status)); });
+      document.querySelectorAll('#filter-engno-toggle-btns .filter-btn').forEach(btn => {
+        if (btn.dataset.engno === 'all') btn.classList.toggle('active', selectedEngNos.size === 0);
+        else btn.classList.toggle('active', selectedEngNos.has(btn.dataset.engno));
+      });
+      document.querySelectorAll('#filter-designer-toggle-btns .filter-btn').forEach(btn => {
+        if (btn.dataset.designer === 'all') btn.classList.toggle('active', selectedDesigners.size === 0);
+        else btn.classList.toggle('active', selectedDesigners.has(btn.dataset.designer));
+      });
+      document.querySelectorAll('#filter-status-btns .filter-btn').forEach(btn => {
+        if (btn.dataset.status === 'all') btn.classList.toggle('active', selectedStatuses.size === 0);
+        else btn.classList.toggle('active', selectedStatuses.has(btn.dataset.status));
+      });
     }
 
     function renderTable() {
@@ -649,22 +621,24 @@
       const todayNum = parseInt(`${minguoYear}${mm}${dd}`, 10);
 
       currentFilteredData = globalData.filter(d => {
-        // 定義一個隱藏判定，若該工單備註欄有內容，則附加「有備註 已備註」關鍵字
-        const hasManualNoteText = (d.manualNote && d.manualNote.trim() !== "") ? "已備註 有備註" : "";
+        const hasManualNoteText = (d.manualNote && String(d.manualNote).trim() !== "") ? "已備註 有備註" : "";
+        const drawingVal = d.designDrawing ? String(d.designDrawing).trim() : "";
+        const drawingFilterText = (drawingVal === "" || drawingVal.toLowerCase().includes("未上傳") || drawingVal.toLowerCase() === "null") ? "未上傳 無設計圖" : "已上傳 有設計圖";
 
         const matchesText = (textSearchQuery === '') ||
-          d.engNo.toLowerCase().includes(textSearchQuery) || 
-          d.id.toLowerCase().includes(textSearchQuery) ||
-          d.designer.toLowerCase().includes(textSearchQuery) ||
-          d.handover.toLowerCase().includes(textSearchQuery) || 
-          d.estComplete.toLowerCase().includes(textSearchQuery) || 
-          d.budget.toLowerCase().includes(textSearchQuery) ||
-          d.loc.toLowerCase().includes(textSearchQuery) ||
-          d.rd1Note.toLowerCase().includes(textSearchQuery) || 
-          d.manualNote.toLowerCase().includes(textSearchQuery) || 
-          d.civilOk.toLowerCase().includes(textSearchQuery) || 
-          d.bureau.toLowerCase().includes(textSearchQuery) ||
-          hasManualNoteText.includes(textSearchQuery); // 注入模糊搜尋池
+          (d.engNo && String(d.engNo).toLowerCase().includes(textSearchQuery)) || 
+          (d.id && String(d.id).toLowerCase().includes(textSearchQuery)) ||
+          (d.designer && String(d.designer).toLowerCase().includes(textSearchQuery)) ||
+          (d.handover && String(d.handover).toLowerCase().includes(textSearchQuery)) || 
+          (d.estComplete && String(d.estComplete).toLowerCase().includes(textSearchQuery)) || 
+          (d.budget && String(d.budget).toLowerCase().includes(textSearchQuery)) ||
+          (d.loc && String(d.loc).toLowerCase().includes(textSearchQuery)) ||
+          (d.rd1Note && String(d.rd1Note).toLowerCase().includes(textSearchQuery)) || 
+          (d.manualNote && String(d.manualNote).toLowerCase().includes(textSearchQuery)) || 
+          (d.civilOk && String(d.civilOk).toLowerCase().includes(textSearchQuery)) || 
+          (d.bureau && String(d.bureau).toLowerCase().includes(textSearchQuery)) ||
+          hasManualNoteText.includes(textSearchQuery) ||
+          drawingFilterText.includes(textSearchQuery);
 
         const matchesEngNo = (selectedEngNos.size === 0) || selectedEngNos.has(d.engNo);
         const matchesBudget = (selectedBudgets.size === 0) || selectedBudgets.has(d.budget);
@@ -672,12 +646,22 @@
 
         let normStatus = 'pending';
         const estNum = parseInt(d.estComplete, 10);
-        if (d.status.includes('1.已完工')) normStatus = 'completed';
+        if ((d.status || '').includes('1.已完工')) normStatus = 'completed';
         else if (!isNaN(estNum) && todayNum > estNum) normStatus = 'overdue';  
-        else if (d.status.includes('3.未完工擇日')) normStatus = 'delayed';
+        else if ((d.status || '').includes('3.未完工擇日')) normStatus = 'delayed';
         
-        const matchesStatus = (selectedStatuses.size === 0) || selectedStatuses.has(normStatus);
-        let bName = d.bureau.replace('雲林', '').trim();
+        // 🚀 設計圖狀態判定解譯 (用於進階橫向複選判定)
+        const drawingStatus = (drawingVal === "" || drawingVal.toLowerCase().includes("未上傳") || drawingVal.toLowerCase() === "null") ? 'drawing_not_uploaded' : 'drawing_uploaded';
+
+        // 🚀 核心雙維度智慧交叉過濾演算法（AND 交叉複合）
+        const hasJobStatusFilter = [...selectedStatuses].some(s => ['completed', 'overdue', 'delayed', 'pending'].includes(s));
+        const hasDrawingStatusFilter = [...selectedStatuses].some(s => ['drawing_uploaded', 'drawing_not_uploaded'].includes(s));
+
+        const matchJob = !hasJobStatusFilter || selectedStatuses.has(normStatus);
+        const matchDrawing = !hasDrawingStatusFilter || selectedStatuses.has(drawingStatus);
+        const matchesStatus = matchJob && matchDrawing;
+
+        let bName = d.bureau ? String(d.bureau).replace('雲林', '').trim() : '';
         const matchesBureau = (selectedBureaus.size === 0) || selectedBureaus.has(bName);
 
         return matchesText && matchesEngNo && matchesBudget && matchesDesigner && matchesStatus && matchesBureau;
@@ -689,8 +673,8 @@
 
       let subCompleted = 0, subDelayed = 0, subPending = 0;
       currentFilteredData.forEach(d => {
-        if (d.status.includes('1.已完工')) subCompleted++;
-        else if (d.status.includes('3.未完工擇日')) subDelayed++;
+        if ((d.status || '').includes('1.已完工')) subCompleted++;
+        else if ((d.status || '').includes('3.未完工擇日')) subDelayed++;
         else subPending++;
       });
       
@@ -709,40 +693,54 @@
       if(!tbody) return;
       const renderLimit = currentFilteredData.slice(0, 60); 
 
-      tbody.innerHTML = renderLimit.map(d => `
-        <tr>
-          <td style="font-family:monospace;font-size:13px;font-weight:600;color:var(--color-text-info)">${d.engNo}</td>
-          <td style="font-family:monospace;font-size:13px;font-weight:500;color:var(--color-text-secondary)">${d.id}</td>
-          <td style="font-size:14px;">${d.designer}</td>
-          <td style="font-family:monospace;font-size:13px;color:var(--color-text-secondary)">${d.handover}</td>
-          <td style="font-family:monospace;font-size:13px;color:var(--color-text-secondary)">${d.estComplete}</td>
-          <td style="font-size:13px;color:var(--color-text-secondary)">${d.budget}</td>
-          <td style="text-align:right;font-weight:500;font-family:monospace;font-size:13px">${Math.round(d.points).toLocaleString()}</td>
-          <td style="text-align:center">${statusTag(d.status, d.estComplete, todayNum)}</td>
-          
-          <td style="text-align:center">
-            <div style="display:flex; align-items:center; justify-content:center; gap:4px;">
-              <input type="checkbox" id="civil-${d.id}" style="width:16px; height:16px; cursor:pointer;" ${d.civilOk && d.civilOk.startsWith('OK') ? 'checked' : ''} onchange="saveCivilStatus('${d.id}', this.checked)">
-              <span id="civil-status-${d.id}" style="font-size:11px;"></span>
-            </div>
-          </td>
-          
-          <td style="color:var(--color-text-secondary);font-size:13px" title="${d.loc}">${d.loc}</td>
-          <td style="font-size:13px;color:var(--color-text-tertiary)" title="${d.rd1Note}">${d.rd1Note}</td>
-          <td style="font-size:13px;color:var(--color-text-tertiary)">${d.bureau}</td>
-          <td>
-            <div style="display:flex; align-items:center;">
-              <input type="text" id="note-${d.id}" class="note-input" value="${d.manualNote}" placeholder="點擊鍵入備註...">
-              <button id="save-btn-${d.id}" class="note-save-btn" onclick="saveManualNote('${d.id}')">儲存</button>
-            </div>
-          </td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = renderLimit.map(d => {
+        const drawingVal = d.designDrawing ? String(d.designDrawing).trim() : "";
+        let drawingMarkup = "";
+        
+        if (drawingVal !== "" && !drawingVal.toLowerCase().includes("未上傳") && drawingVal !== "null") {
+          drawingMarkup = `<span style="color:var(--color-text-success); font-weight:600; font-size:13px;"> 已上傳</span>`;
+        } else {
+          drawingMarkup = `<span style="color:var(--color-text-danger); font-weight:600; font-size:13px;">❌ 未上傳</span>`;
+        }
+
+        return `
+          <tr>
+            <td style="font-family:monospace;font-size:13px;font-weight:600;color:var(--color-text-info)">${d.engNo || ''}</td>
+            <td style="font-family:monospace;font-size:13px;font-weight:500;color:var(--color-text-secondary)">${d.id || ''}</td>
+            <td style="font-size:14px;">${d.designer || ''}</td>
+            
+            <td style="text-align:center; vertical-align:middle;">${drawingMarkup}</td>
+            
+            <td style="font-family:monospace;font-size:13px;color:var(--color-text-secondary)">${d.handover || ''}</td>
+            <td style="font-family:monospace;font-size:13px;color:var(--color-text-secondary)">${d.estComplete || ''}</td>
+            <td style="font-size:13px;color:var(--color-text-secondary)">${d.budget || ''}</td>
+            <td style="text-align:right;font-weight:500;font-family:monospace;font-size:13px">${Math.round(d.points || 0).toLocaleString()}</td>
+            <td style="text-align:center">${statusTag(d.status || '', d.estComplete || '', todayNum)}</td>
+            
+            <td style="text-align:center">
+              <div style="display:flex; align-items:center; justify-content:center; gap:4px;">
+                <input type="checkbox" id="civil-${d.id}" style="width:16px; height:16px; cursor:pointer;" ${(d.civilOk || '').startsWith('OK') ? 'checked' : ''} onchange="saveCivilStatus('${d.id}', this.checked)">
+                <span id="civil-status-${d.id}" style="font-size:11px;"></span>
+              </div>
+            </td>
+            
+            <td style="color:var(--color-text-secondary);font-size:13px" title="${d.loc || ''}">${d.loc || ''}</td>
+            <td style="font-size:13px;color:var(--color-text-tertiary)" title="${d.rd1Note || ''}">${d.rd1Note || ''}</td>
+            <td style="font-size:13px;color:var(--color-text-tertiary)">${d.bureau || ''}</td>
+            <td>
+              <div style="display:flex; align-items:center;">
+                <input type="text" id="note-${d.id}" class="note-input" value="${d.manualNote || ''}" placeholder="點擊鍵入備註...">
+                <button id="save-btn-${d.id}" class="note-save-btn" onclick="saveManualNote('${d.id}')">儲存</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
 
       if (currentFilteredData.length > 60) {
-        tbody.innerHTML += `<tr><td colspan="13" style="text-align:center;color:var(--color-text-tertiary);background:var(--color-background-secondary);font-size:11px;padding:8px">💡 提示：符合五維複合條件共 ${currentFilteredData.length} 筆，已自動分流顯示前 60 筆。</td></tr>`;
+        tbody.innerHTML += `<tr><td colspan="14" style="text-align:center;color:var(--color-text-tertiary);background:var(--color-background-secondary);font-size:11px;padding:8px">💡 提示：符合五維複合條件共 ${currentFilteredData.length} 筆，已自動分流顯示前 60 筆。</td></tr>`;
       } else if (currentFilteredData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;color:var(--color-text-tertiary);padding:24px">❌ 查無任何匹配工單。</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;color:var(--color-text-tertiary);padding:24px">❌ 查無任何匹配工單。</td></tr>`;
       }
     }
 
@@ -750,7 +748,6 @@
       if (s.includes('1.已完工')) return `<span class="tag" style="background:#E1F5EE;color:#085041">已完工</span>`;
       let baseStatus = '施工中'; let baseStyle = 'background:#F1EFE8;color:#444441';
       if (s.includes('3.未完工擇日')) { baseStatus = '擇日續工'; baseStyle = 'background:#FAEEDA;color:#633806'; }
-
       const estNum = parseInt(estComplete, 10);
       if (!isNaN(estNum) && todayNum > estNum) {
         return `<span class="tag" style="background:var(--color-background-danger); color:var(--color-text-danger); font-weight:bold; border: 0.5px solid var(--color-border-danger, rgba(167, 61, 57, 0.5))">⚠️ 逾期 (${baseStatus})</span>`;
@@ -760,7 +757,7 @@
 
     function exportFilteredTableToCSV() {
       if (!currentFilteredData || currentFilteredData.length === 0) { alert("目前沒有任何數據可以導出！"); return; }
-      const headers = ["工程編號", "工作單流水號", "設計員", "交商日期", "預完日期", "預算動支別", "交商積點數", "回報狀態", "土木ok", "手動備註", "施工地點", "RD1備註", "交換局名"];
+      const headers = ["工程編號", "工作單流水號", "設計員", "設計圖狀態", "交商日期", "預完日期", "預算動支別", "交商積點數", "回報狀態", "土木ok", "施工地點", "RD1備註", "交換局名", "手動備註"];
       let csvString = "\ufeff" + headers.join(",") + "\n";
 
       const today = new Date();
@@ -771,15 +768,16 @@
 
       currentFilteredData.forEach(d => {
         let textStatus = '施工中';
-        if (d.status.includes('1.開通已完工') || d.status.includes('1.已完工')) textStatus = '已完工';
+        if ((d.status || '').includes('1.已完工')) textStatus = '已完工';
         else {
-          let baseText = d.status.includes('3.未完工擇日') ? '擇日續工' : '施工中';
+          let baseText = (d.status || '').includes('3.未完工擇日') ? '擇日續工' : '施工中';
           const estNum = parseInt(d.estComplete, 10);
           if (!isNaN(estNum) && todayNum > estNum) textStatus = `⚠️ 逾期 (${baseText})`;
-          else if (d.status.includes('3.未完工擇日')) textStatus = '擇日續工';
+          else if ((d.status || '').includes('3.未完工擇日')) textStatus = '擇日續工';
         }
 
-        const rowData = [d.engNo, d.id, d.designer, d.handover, d.estComplete, d.budget, d.points, textStatus, d.civilOk, d.manualNote, d.loc, d.rd1Note, d.bureau];
+        let drawingStatusText = (d.designDrawing && String(d.designDrawing).trim() !== "" && !String(d.designDrawing).toLowerCase().includes("未上傳")) ? "已上傳" : "未上傳";
+        const rowData = [d.engNo, d.id, d.designer, drawingStatusText, d.handover, d.estComplete, d.budget, d.points, textStatus, d.civilOk, d.loc, d.rd1Note, d.bureau, d.manualNote];
         const escapedRow = rowData.map(val => {
           let str = String(val).replace(/"/g, '""');
           if (str.includes(',') || str.includes('\n') || str.includes('"')) return `"${str}"`;
