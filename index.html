@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>電信工程施工進度_v2.6</title>
+  <title>電信工程施工進度_v2.7</title>
   <style id="mcp-host-fonts">
     @font-face {
       font-family: "Anthropic Sans";
@@ -198,16 +198,26 @@
   </div>
 
   <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <p class="card-title" style="margin:0">進階動態交叉五維篩選與智慧搜尋控制台</p>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:12px;font-weight:600;color:var(--color-text-info)" id="filter-count">0 件工單</span>
+        <button class="filter-btn" id="btn-export-excel" style="background:var(--color-background-success); color:var(--color-text-success); border-color:var(--color-border-success); font-weight:600;">📊 匯出為 Excel</button>
+      </div>
+    </div>
     
+    <div class="filter-section-title">🔍 智慧手動輸入篩選器：</div>
+    <input type="text" id="txt-search" class="search-input-box" placeholder="輸入工程編號、工單流水號... (輸入「未上傳」可篩選出未交圖工單；輸入「有備註」可篩選出已有備註之工單)">
+
     <div class="filter-section-title">🏗️ 工程編號篩選 (支援複選)：</div>
     <div class="filter-row" id="filter-engno-toggle-btns"></div>
-    
+
     <div class="filter-section-title">📂 預算動支別篩選 (支援複選)：</div>
     <div class="filter-row" id="filter-budget-btns"></div>
-    
+
     <div class="filter-section-title">👤 設計員篩選 (支援複選)：</div>
     <div class="filter-row" id="filter-designer-toggle-btns"></div>
-    
+
     <div class="filter-section-title">🚦 完工狀態篩選 (支援複選多選)：</div>
     <div class="filter-row" id="filter-status-btns">
       <button class="filter-btn active" data-status="all" id="btn-status-all">全部狀態</button>
@@ -218,31 +228,19 @@
       <button class="filter-btn" data-status="drawing_uploaded">圖已上傳</button>
       <button class="filter-btn" data-status="drawing_not_uploaded">❌圖未上傳</button>
     </div>
-    
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <p class="card-title" style="margin:0">進階動態交叉五維篩選與智慧搜尋控制台</p>
-      <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size:12px;font-weight:600;color:var(--color-text-info)" id="filter-count">0 件工單</span>
-        <button class="filter-btn" id="btn-export-csv" style="background:var(--color-background-success); color:var(--color-text-success); border-color:var(--color-border-success); font-weight:600;">📥 匯出當前表格</button>
-      </div>
-    </div>
-    
-    <div class="filter-section-title">🔍 智慧手動輸入篩選器：</div>
-    <input type="text" id="txt-search" class="search-input-box" placeholder="輸入工程編號、工單流水號... (輸入「未上傳」可篩選出未交圖工單；輸入「有備註」可篩選出已有備註之工單)">
-    
-    <!-- 🚀 補全功能：核心智慧直欄切換控制台區塊 -->
-    <div class="filter-section-title" style="color:var(--color-text-info)">📋 智慧欄位顯示顯示/切換開關：</div>
+
+    <div class="filter-section-title" style="color:var(--color-text-info)">📋 智慧欄位顯示顯示/切換開關 (點擊可靈活隱藏欄位，防爆破版)：</div>
     <div class="filter-row" id="filter-column-chooser-btns">
       <button class="filter-btn active" data-col="2" onclick="toggleColumn(2)">👤 設計員</button>
-      <button class="filter-btn active" data-col="3" onclick="toggleColumn(3)">🖼️ 設計圖上傳</button>
+      <button class="filter-btn active" data-col="3" onclick="toggleColumn(3)">🖼️ 設計圖狀態</button>
       <button class="filter-btn active" data-col="4" onclick="toggleColumn(4)">📅 交商日期</button>
       <button class="filter-btn active" data-col="5" onclick="toggleColumn(5)">⏳ 預完日期</button>
       <button class="filter-btn active" data-col="6" onclick="toggleColumn(6)">📂 預算動支別</button>
       <button class="filter-btn active" data-col="7" onclick="toggleColumn(7)">📊 交商積點</button>
-      <button class="filter-btn active" data-col="10" onclick="toggleColumn(10)">📍 施工地點</button>
       <button class="filter-btn active" data-col="11" onclick="toggleColumn(11)">📜 RD1備註</button>
       <button class="filter-btn active" data-col="12" onclick="toggleColumn(12)">🏢 所屬交換局</button>
       <button class="filter-btn active" data-col="13" onclick="toggleColumn(13)">📝 手動備註欄</button>
+      <button class="filter-btn active" data-col="10" onclick="toggleColumn(10)">📍 施工地點</button>
     </div>
 
     <div class="table-container">
@@ -259,10 +257,10 @@
             <th style="width:75px;text-align:right">交商積點</th>
             <th style="width:130px;text-align:center">完工狀態</th>
             <th style="width:90px;text-align:center;background:var(--color-background-success);color:var(--color-text-success)">🏗️ 土木ok</th>
-            <th style="width:200px">施工地點</th>
             <th style="width:140px">RD1備註</th>
             <th style="width:110px">所屬交換局名</th>
             <th style="width:210px; background:var(--color-background-info)">📝 手動備註</th>
+            <th style="width:200px">施工地點</th>
           </tr>
         </thead>
         <tbody id="detail-tbody"></tbody>
@@ -271,6 +269,7 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   
   <script>
     const ENCRYPTED_CONFIG = "PlO6p1rLsLHkRs9Gzn6WxmjXEcO3eVuJiuiBmmeT/HC6D16bSi51XIIEMqUbRvEfObbbAcBmJhtODHjfejbLoe/ms3na34XEt95rKChiPRc+MDgXsOIxMU5M1JezpwSSTEzRh1EgT+DhQWBn5sXdLJpVs2outWlEckHn0MUcI8Ae2JMCOhaleCJbGzSvaAEh4LU9Jp+aFLKjSqXKo5Z4N+A="; 
@@ -449,7 +448,6 @@
         const desBarsEl = document.getElementById('designer-bars'); 
         desBarsEl.innerHTML = '';
         desBarsEl.style.display = 'grid'; desBarsEl.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))'; desBarsEl.style.gap = '8px';
-
         const maxDesCount = desSorted[0] ? desSorted[0][1].count : 1;
         const palette = ['#378ADD', '#7F77DD', '#1D9E75', '#BA7517', '#D85A30', '#D4537E'];
         desSorted.forEach(([name, info], idx) => {
@@ -492,12 +490,13 @@
 
         renderTable();
       } catch (chartErr) {
-        console.warn("圖表初始化微幅延遲：", chartErr);
+        console.warn("圖表加載微幅延遲，不影響清單檢視：", chartErr);
       }
     }
 
     function setupFilterControlLogic() {
-      document.getElementById('btn-export-csv').addEventListener('click', exportFilteredTableToCSV);
+      // 🚀 將點擊事件綁定至 Excel 匯出模組
+      document.getElementById('btn-export-excel').addEventListener('click', exportFilteredTableToExcel);
 
       document.getElementById('btn-toggle-budget').addEventListener('click', e => {
         const el = document.getElementById('budget-bars'); const btn = e.target;
@@ -560,7 +559,6 @@
       });
     }
 
-    // 🚀 補全功能：控制智慧直欄開關核心 Engine (完美重算總寬度，防止橫向爆版留白)
     function toggleColumn(idx) {
       const btn = event.currentTarget;
       const ths = document.querySelectorAll('#detail-table th');
@@ -575,35 +573,14 @@
         btn.classList.remove('active');
       }
       
-      // 精密動態調整 table 元件寬度，移除或減少橫向滾動條負擔
       let totalWidth = columnWidths.reduce((sum, width, i) => sum + (hiddenColumns.has(i) ? 0 : width), 0);
       document.getElementById('detail-table').style.width = totalWidth + 'px';
       
       renderTable();
     }
 
-    // 🚀 補全功能：判定特定直欄隱藏輔助器
     function checkHide(idx) {
       return hiddenColumns.has(idx) ? 'display:none;' : '';
-    }
-
-    // 🚀 補全功能：將日期字串清洗為標準民國年八位純數字格式（例如將 "115/06/19" 或 "115 6 19" 轉為 1150619 供精準大小比較）
-    function cleanMinguoDate(dateStr) {
-      if (!dateStr || dateStr === '---') return 0;
-      let cleanStr = String(dateStr).replace(/[\/\s-]/g, '').trim();
-      if (cleanStr.length === 7) {
-        return parseInt(cleanStr, 10);
-      }
-      // 容錯機制：若月份或日期沒補零(如 115619)進行二次切片智慧補零
-      let match = String(dateStr).match(/^(\d{3})[\/\s-]?(\d{1,2})[\/\s-]?(\d{1,2})$/);
-      if (match) {
-        let y = match[1];
-        let m = match[2].padStart(2, '0');
-        let d = match[3].padStart(2, '0');
-        return parseInt(`${y}${m}${d}`, 10);
-      }
-      let parsed = parseInt(cleanStr, 10);
-      return isNaN(parsed) ? 0 : parsed;
     }
 
     async function saveManualNote(id) {
@@ -611,8 +588,7 @@
       const saveBtn = document.getElementById(`save-btn-${id}`);
       if (!noteInput) return;
       const noteValue = noteInput.value.trim();
-      if (APPS_SCRIPT_URL.includes("xxxx") || APPS_SCRIPT_URL === "") { alert("請先在 HTML 原始碼中配置正確的 APPS_SCRIPT_URL！"); return; }
-      
+      if (APPS_SCRIPT_URL.includes("xxxx")) { alert("請先在 HTML 原始碼中配置正確的 APPS_SCRIPT_URL！"); return; }
       saveBtn.innerText = "⏳ 寫入"; saveBtn.disabled = true;
       try {
         const fetchUrl = `${APPS_SCRIPT_URL}?id=${encodeURIComponent(id)}&note=${encodeURIComponent(noteValue)}`;
@@ -628,8 +604,7 @@
     async function saveCivilStatus(id, isChecked) {
       const statusSpan = document.getElementById(`civil-status-${id}`); const checkbox = document.getElementById(`civil-${id}`);
       if (!statusSpan || !checkbox) return;
-      if (APPS_SCRIPT_URL.includes("xxxx") || APPS_SCRIPT_URL === "") { alert("請先在 HTML 原始碼中配置正確的 APPS_SCRIPT_URL！"); return; }
-      
+      if (APPS_SCRIPT_URL.includes("xxxx")) { alert("請先在 HTML 原始碼中配置正確的 APPS_SCRIPT_URL！"); return; }
       statusSpan.innerText = "⏳"; checkbox.disabled = true;
       try {
         let civilValue = "";
@@ -703,10 +678,9 @@
         const matchesDesigner = (selectedDesigners.size === 0) || selectedDesigners.has(d.designer);
 
         let normStatus = 'pending';
-        // 🚀 優化點：呼叫日期清洗器，徹底解決民國年含斜線比對錯誤導致逾期誤報的缺陷
-        const estNum = cleanMinguoDate(d.estComplete);
+        const estNum = parseInt(d.estComplete, 10);
         if ((d.status || '').includes('1.已完工')) normStatus = 'completed';
-        else if (estNum > 0 && todayNum > estNum) normStatus = 'overdue';  
+        else if (!isNaN(estNum) && todayNum > estNum) normStatus = 'overdue';  
         else if ((d.status || '').includes('3.未完工擇日')) normStatus = 'delayed';
         
         const drawingStatus = (drawingVal === "" || drawingVal.toLowerCase().includes("未上傳") || drawingVal.toLowerCase() === "null") ? 'drawing_not_uploaded' : 'drawing_uploaded';
@@ -750,36 +724,38 @@
       if(!tbody) return;
       const renderLimit = currentFilteredData.slice(0, 60); 
 
-      // 🚀 補全與重構：完美將 checkHide(欄位索引) 綁定到對應的 td 上，達成網頁靈活顯示
       tbody.innerHTML = renderLimit.map(d => {
         const drawingVal = d.designDrawing ? String(d.designDrawing).trim() : "";
         let drawingMarkup = "";
+        
         if (drawingVal !== "" && !drawingVal.toLowerCase().includes("未上傳") && drawingVal !== "null") {
-          drawingMarkup = `<span style="color:var(--color-text-success); font-weight:600; font-size:13px;"> 已上傳</span>`;
+          drawingMarkup = `<span style="color:var(--color-text-success); font-weight:600; font-size:13px;">✅ 已上傳</span>`;
         } else {
           drawingMarkup = `<span style="color:var(--color-text-danger); font-weight:600; font-size:13px;">❌ 未上傳</span>`;
         }
-
-        const estNum = cleanMinguoDate(d.estComplete);
 
         return `
           <tr>
             <td style="font-family:monospace;font-size:13px;font-weight:600;color:var(--color-text-info); ${checkHide(0)}">${d.engNo || ''}</td>
             <td style="font-family:monospace;font-size:13px;font-weight:500;color:var(--color-text-secondary); ${checkHide(1)}">${d.id || ''}</td>
             <td style="font-size:14px; ${checkHide(2)}">${d.designer || ''}</td>
+            
             <td style="text-align:center; vertical-align:middle; ${checkHide(3)}">${drawingMarkup}</td>
+            
             <td style="font-family:monospace;font-size:13px;color:var(--color-text-secondary); ${checkHide(4)}">${d.handover || ''}</td>
             <td style="font-family:monospace;font-size:13px;color:var(--color-text-secondary); ${checkHide(5)}">${d.estComplete || ''}</td>
             <td style="font-size:13px;color:var(--color-text-secondary); ${checkHide(6)}">${d.budget || ''}</td>
             <td style="text-align:right;font-weight:500;font-family:monospace;font-size:13px; ${checkHide(7)}">${Math.round(d.points || 0).toLocaleString()}</td>
-            <td style="text-align:center; ${checkHide(8)}">${statusTag(d.status || '', estNum, todayNum)}</td>
+            <td style="text-align:center; ${checkHide(8)}">${statusTag(d.status || '', d.estComplete || '', todayNum)}</td>
+            
             <td style="text-align:center; ${checkHide(9)}">
               <div style="display:flex; align-items:center; justify-content:center; gap:4px;">
                 <input type="checkbox" id="civil-${d.id}" style="width:16px; height:16px; cursor:pointer;" ${(d.civilOk || '').startsWith('OK') ? 'checked' : ''} onchange="saveCivilStatus('${d.id}', this.checked)">
                 <span id="civil-status-${d.id}" style="font-size:11px;"></span>
               </div>
             </td>
-            <td style="color:var(--color-text-secondary);font-size:13px; ${checkHide(10)}" title="${d.loc || ''}">${d.loc || ''}</td>
+            
+
             <td style="font-size:13px;color:var(--color-text-tertiary); ${checkHide(11)}" title="${d.rd1Note || ''}">${d.rd1Note || ''}</td>
             <td style="font-size:13px;color:var(--color-text-tertiary); ${checkHide(12)}">${d.bureau || ''}</td>
             <td style="${checkHide(13)}">
@@ -788,33 +764,38 @@
                 <button id="save-btn-${d.id}" class="note-save-btn" onclick="saveManualNote('${d.id}')">儲存</button>
               </div>
             </td>
+            <td style="color:var(--color-text-secondary);font-size:13px; ${checkHide(10)}" title="${d.loc || ''}">${d.loc || ''}</td>
+
           </tr>
         `;
       }).join('');
 
-      // 智慧重算 colspan 防破版提示條
-      let activeCols = 14 - hiddenColumns.size;
+      let dynamicColspan = 14 - hiddenColumns.size;
+
       if (currentFilteredData.length > 60) {
-        tbody.innerHTML += `<tr><td colspan="${activeCols}" style="text-align:center;color:var(--color-text-tertiary);background:var(--color-background-secondary);font-size:11px;padding:8px">💡 提示：符合五維複合條件共 ${currentFilteredData.length} 筆，已自動分流顯示前 60 筆。</td></tr>`;
+        tbody.innerHTML += `<tr><td colspan="${dynamicColspan}" style="text-align:center;color:var(--color-text-tertiary);background:var(--color-background-secondary);font-size:11px;padding:8px">💡 提示：符合五維複合條件共 ${currentFilteredData.length} 筆，已自動分流顯示前 60 筆。</td></tr>`;
       } else if (currentFilteredData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${activeCols}" style="text-align:center;color:var(--color-text-tertiary);padding:24px">❌ 查無任何匹配工單。</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${dynamicColspan}" style="text-align:center;color:var(--color-text-tertiary);padding:24px">❌ 查無任何匹配工單。</td></tr>`;
       }
     }
 
-    function statusTag(s, estNum, todayNum) {
+    function statusTag(s, estComplete, todayNum) {
       if (s.includes('1.已完工')) return `<span class="tag" style="background:#E1F5EE;color:#085041">已完工</span>`;
       let baseStatus = '施工中'; let baseStyle = 'background:#F1EFE8;color:#444441';
       if (s.includes('3.未完工擇日')) { baseStatus = '擇日續工'; baseStyle = 'background:#FAEEDA;color:#633806'; }
-      if (estNum > 0 && todayNum > estNum) {
+      const estNum = parseInt(estComplete, 10);
+      if (!isNaN(estNum) && todayNum > estNum) {
         return `<span class="tag" style="background:var(--color-background-danger); color:var(--color-text-danger); font-weight:bold; border: 0.5px solid var(--color-border-danger, rgba(167, 61, 57, 0.5))">⚠️ 逾期 (${baseStatus})</span>`;
       }
       return `<span class="tag" style="${baseStyle}">${baseStatus}</span>`;
     }
 
-    function exportFilteredTableToCSV() {
+    // 🚀 核心升級：導入 SheetJS 陣列模式原生地輸出為 Excel (.xlsx) 檔案
+    function exportFilteredTableToExcel() {
       if (!currentFilteredData || currentFilteredData.length === 0) { alert("目前沒有任何數據可以導出！"); return; }
-      const headers = ["工程編號", "工作單流水號", "設計員", "設計圖狀態", "交商日期", "預完日期", "預算動支別", "交商積點數", "回報狀態", "土木ok", "施工地點", "RD1備註", "交換局名", "手動備註"];
-      let csvString = "\ufeff" + headers.join(",") + "\n";
+      
+      const headers = ["工程編號", "工作單流水號", "設計員", "設計圖狀態", "交商日期", "預完日期", "預算動支別", "交商積點數", "回報狀態", "土木ok", "RD1備註", "交換局名", "手動備註", "施工地點"];
+      const exportData = [headers];
 
       const today = new Date();
       const minguoYear = today.getFullYear() - 1911;
@@ -824,30 +805,27 @@
 
       currentFilteredData.forEach(d => {
         let textStatus = '施工中';
-        const estNum = cleanMinguoDate(d.estComplete);
-        if ((d.status || '').includes('1.已完工')) textStatus = '已完工';
+        if ((d.status || '').includes('1.已完工') || (d.status || '').includes('1.現已完工') || (d.status || '').includes('完工工程') || (d.status || '').includes('聯通已完工')) textStatus = '已完工';
         else {
           let baseText = (d.status || '').includes('3.未完工擇日') ? '擇日續工' : '施工中';
-          if (estNum > 0 && todayNum > estNum) textStatus = `⚠️ 逾期 (${baseText})`;
+          const estNum = parseInt(d.estComplete, 10);
+          if (!isNaN(estNum) && todayNum > estNum) textStatus = `⚠️ 逾期 (${baseText})`;
           else if ((d.status || '').includes('3.未完工擇日')) textStatus = '擇日續工';
         }
 
-        let drawingStatusText = (d.designDrawing && String(d.designDrawing).trim() !== "" && !String(d.designDrawing).toLowerCase().includes("未上傳")) ? "已上傳" : "未上傳";
-        const rowData = [d.engNo, d.id, d.designer, drawingStatusText, d.handover, d.estComplete, d.budget, d.points, textStatus, d.civilOk, d.loc, d.rd1Note, d.bureau, d.manualNote];
-        const escapedRow = rowData.map(val => {
-          let str = String(val).replace(/"/g, '""');
-          if (str.includes(',') || str.includes('\n') || str.includes('"')) return `"${str}"`;
-          return str;
-        });
-        csvString += escapedRow.join(",") + "\n";
+        let drawingStatusText = (d.designDrawing && String(d.designDrawing).trim() !== "" && !String(d.designDrawing).toLowerCase().includes("未上傳") && String(d.designDrawing).toLowerCase() !== "null") ? "已上傳" : "未上傳";
+        
+        const rowData = [d.engNo, d.id, d.designer, drawingStatusText, d.handover, d.estComplete, d.budget, d.points, textStatus, d.civilOk, d.rd1Note, d.bureau, d.manualNote, d.loc];
+        exportData.push(rowData);
       });
 
-      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-      const downloadLink = document.createElement("a");
-      downloadLink.href = URL.createObjectURL(blob);
-      downloadLink.setAttribute("download", `CHT_工單進階篩選報表_${today.getFullYear()}${mm}${dd}.csv`);
-      downloadLink.style.visibility = "hidden"; document.body.appendChild(downloadLink);
-      downloadLink.click(); document.body.removeChild(downloadLink);
+      // 建立 SheetJS 格式的 Workbook 與 Worksheet
+      const ws = XLSX.utils.aoa_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "篩選報表");
+      
+      // 自動匯出成原生的 .xlsx 格式檔案
+      XLSX.writeFile(wb, `CHT_工單進階篩選報表_${today.getFullYear()}${mm}${dd}.xlsx`);
     }
 
     window.addEventListener('DOMContentLoaded', initSecureConnection);
