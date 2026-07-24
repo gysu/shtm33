@@ -175,7 +175,7 @@
     </div>
     <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-        <p class="card-title">核心動支別積點量級對比（萬點）</p>
+        <p class="card-title">核心動支別積點量級對比（萬點） (隨篩選動態重新配比 🔄)</p>
         <button class="filter-btn" id="btn-toggle-points">📊 隱藏圖表</button>
       </div>
       <div id="points-content">
@@ -718,6 +718,24 @@
       if (statusChartInstance && statusChartInstance.data) {
         statusChartInstance.data.datasets[0].data = [subPending, subCompleted, subDelayed];
         statusChartInstance.update();
+      }
+
+      if (pointsChartInstance && pointsChartInstance.data) {
+        const subBudgetMap = {};
+        currentFilteredData.forEach(d => {
+          if (d.budget) {
+            if (!subBudgetMap[d.budget]) subBudgetMap[d.budget] = { count: 0, points: 0 };
+            subBudgetMap[d.budget].count++;
+            subBudgetMap[d.budget].points += (d.points || 0);
+          }
+        });
+        const subBudgetSorted = Object.entries(subBudgetMap).sort((a, b) => b[1].count - a[1].count);
+        const subTopBudgetsForChart = subBudgetSorted.slice(0, 6);
+
+        pointsChartInstance.data.labels = subTopBudgetsForChart.map(([name]) => name.substring(0, 5));
+        pointsChartInstance.data.datasets[0].data = subTopBudgetsForChart.map(([, info]) => (info.points / 10000).toFixed(1));
+        pointsChartInstance.data.datasets[0].backgroundColor = subTopBudgetsForChart.map(([name]) => budgetColors[name] || '#888780');
+        pointsChartInstance.update();
       }
 
       const tbody = document.getElementById('detail-tbody');
