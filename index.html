@@ -89,7 +89,7 @@
     .search-input-box:focus { border-color: var(--color-border-info); box-shadow: 0 0 0 3px var(--color-background-info); }
 
     .table-container { overflow-x: auto; background: var(--color-background-primary); border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); }
-    #detail-table { border-collapse: collapse; font-size: 14px; table-layout: fixed; width: 1780px; }
+    #detail-table { border-collapse: collapse; font-size: 14px; table-layout: fixed; width: 1980px; }
     #detail-table th { text-align: left; padding: 8px; border-bottom: 0.5px solid var(--color-border-secondary); color: var(--color-text-secondary); font-weight: 500; background: var(--color-background-secondary); }
     #detail-table td { padding: 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #detail-table tr:hover td { background: var(--color-background-secondary); }
@@ -231,36 +231,42 @@
 
     <div class="filter-section-title" style="color:var(--color-text-info)">📋 智慧欄位顯示顯示/切換開關 (點擊可靈活隱藏欄位，防爆破版)：</div>
     <div class="filter-row" id="filter-column-chooser-btns">
+      <button class="filter-btn active" data-col="0" onclick="toggleColumn(0)">工程編號</button>
+      <button class="filter-btn active" data-col="1" onclick="toggleColumn(1)">工作單流水號</button>
       <button class="filter-btn active" data-col="2" onclick="toggleColumn(2)">👤 設計員</button>
       <button class="filter-btn active" data-col="3" onclick="toggleColumn(3)">🖼️ 設計圖狀態</button>
       <button class="filter-btn active" data-col="4" onclick="toggleColumn(4)">📅 交商日期</button>
       <button class="filter-btn active" data-col="5" onclick="toggleColumn(5)">⏳ 預完日期</button>
       <button class="filter-btn active" data-col="6" onclick="toggleColumn(6)">📂 預算動支別</button>
       <button class="filter-btn active" data-col="7" onclick="toggleColumn(7)">📊 交商積點</button>
-      <button class="filter-btn active" data-col="11" onclick="toggleColumn(11)">📜 RD1備註</button>
-      <button class="filter-btn active" data-col="12" onclick="toggleColumn(12)">🏢 所屬交換局</button>
-      <button class="filter-btn active" data-col="13" onclick="toggleColumn(13)">📝 手動備註欄</button>
-      <button class="filter-btn active" data-col="10" onclick="toggleColumn(10)">📍 施工地點</button>
+      <button class="filter-btn active" data-col="8" onclick="toggleColumn(8)">完工狀態</button>
+      <button class="filter-btn active" data-col="9" onclick="toggleColumn(9)">🏗️ 土木ok</button>
+      <button class="filter-btn active" data-col="10" onclick="toggleColumn(10)">📜 RD1備註</button>
+      <button class="filter-btn active" data-col="11" onclick="toggleColumn(11)">🏢 所屬交換局</button>
+      <button class="filter-btn active" data-col="12" onclick="toggleColumn(12)">📝 手動備註欄</button>
+      <button class="filter-btn active" data-col="13" onclick="toggleColumn(13)">📍 施工地點</button>
+      <button class="filter-btn active" data-col="14" onclick="toggleColumn(14)">📋 PCD施工備註</button>
     </div>
 
     <div class="table-container">
       <table id="detail-table">
         <thead>
           <tr>
-            <th style="width:110px">工程編號</th>
-            <th style="width:100px">工作單流水號</th>
-            <th style="width:75px">設計員</th>
-            <th style="width:120px;text-align:center;background:var(--color-background-info);color:var(--color-text-info)">設計圖上傳</th>
-            <th style="width:85px">交商日期</th>
-            <th style="width:85px">預完日期</th>
-            <th style="width:150px">預算動支別</th>
+            <th style="width:75px">工程編號</th>
+            <th style="width:90px">工作單流水號</th>
+            <th style="width:70px">設計員</th>
+            <th style="width:80px;text-align:center;background:var(--color-background-info);color:var(--color-text-info)">設計圖上傳</th>
+            <th style="width:70px">交商日期</th>
+            <th style="width:70px">預完日期</th>
+            <th style="width:130px">預算動支別</th>
             <th style="width:75px;text-align:right">交商積點</th>
-            <th style="width:130px;text-align:center">完工狀態</th>
-            <th style="width:90px;text-align:center;background:var(--color-background-success);color:var(--color-text-success)">🏗️ 土木ok</th>
-            <th style="width:140px">RD1備註</th>
+            <th style="width:110px;text-align:center">完工狀態</th>
+            <th style="width:70px;text-align:center;background:var(--color-background-success);color:var(--color-text-success)">🏗️ 土木ok</th>
+            <th style="width:90px">RD1備註</th>
             <th style="width:110px">所屬交換局名</th>
-            <th style="width:210px; background:var(--color-background-info)">📝 手動備註</th>
+            <th style="width:160px; background:var(--color-background-info)">📝 手動備註</th>
             <th style="width:200px">施工地點</th>
+            <th style="width:200px">PCD施工備註</th>
           </tr>
         </thead>
         <tbody id="detail-tbody"></tbody>
@@ -285,9 +291,9 @@
     let selectedBureaus = new Set();   
     let textSearchQuery = ""; 
     
-    // 🚀 補全功能：直欄控制狀態管理陣列與精準寬度定義表（14欄總合 1780px）
+    // 🚀 補全功能：直欄控制狀態管理陣列與精準寬度定義表（15欄總合 1980px）
     let hiddenColumns = new Set();
-    const columnWidths = [110, 100, 75, 120, 85, 85, 150, 75, 130, 90, 200, 140, 110, 210];
+    const columnWidths = [110, 100, 75, 120, 85, 85, 150, 75, 130, 90, 140, 110, 210, 200, 200];
 
     let statusChartInstance = null;
     let pointsChartInstance = null;
@@ -358,6 +364,14 @@
         const idxManualNote = headers.indexOf('手動備註'); 
         const idxCivilOk = headers.indexOf('土木ok'); 
         
+        let idxPcdNote = headers.indexOf('PCD施工備註');
+        if (idxPcdNote === -1) {
+          idxPcdNote = headers.findIndex(h => h.includes('PCD') || h.includes('施工備註'));
+        }
+        if (idxPcdNote === -1 && headers.length > 11) {
+          idxPcdNote = 11; // L column fallback
+        }
+
         let idxDesignDrawing = headers.indexOf('設計圖上傳'); 
         if (idxDesignDrawing === -1) {
           idxDesignDrawing = headers.findIndex(h => h.includes('設計圖'));
@@ -380,6 +394,7 @@
             points: pts,
             status: rawStatus,
             loc: getCell(idxLoc),
+            pcdNote: getCell(idxPcdNote) || '',
             rd1Note: getCell(idxRd1Note) || '---',         
             bureau: getCell(idxBureau) || '未知區域',
             manualNote: getCell(idxManualNote) || '',
@@ -666,6 +681,7 @@
           (d.estComplete && String(d.estComplete).toLowerCase().includes(textSearchQuery)) || 
           (d.budget && String(d.budget).toLowerCase().includes(textSearchQuery)) ||
           (d.loc && String(d.loc).toLowerCase().includes(textSearchQuery)) ||
+          (d.pcdNote && String(d.pcdNote).toLowerCase().includes(textSearchQuery)) ||
           (d.rd1Note && String(d.rd1Note).toLowerCase().includes(textSearchQuery)) || 
           (d.manualNote && String(d.manualNote).toLowerCase().includes(textSearchQuery)) || 
           (d.civilOk && String(d.civilOk).toLowerCase().includes(textSearchQuery)) || 
@@ -752,6 +768,12 @@
           drawingMarkup = `<span style="color:var(--color-text-danger); font-weight:600; font-size:13px;">❌ 未上傳</span>`;
         }
 
+        const rd1Val = d.rd1Note ? String(d.rd1Note).trim() : "";
+        let rd1Markup = d.rd1Note || '';
+        if (rd1Val.length === 10) {
+          rd1Markup = `<a href="https://pwd.yunlin.gov.tw/YLPipe/CaseState?AppNo=${encodeURIComponent(rd1Val)}" target="_blank" rel="noopener noreferrer" style="color:var(--color-text-info); text-decoration:underline; font-weight:500;">${d.rd1Note}</a>`;
+        }
+
         return `
           <tr>
             <td style="font-family:monospace;font-size:13px;font-weight:600;color:var(--color-text-info); ${checkHide(0)}">${d.engNo || ''}</td>
@@ -774,21 +796,22 @@
             </td>
             
 
-            <td style="font-size:13px;color:var(--color-text-tertiary); ${checkHide(11)}" title="${d.rd1Note || ''}">${d.rd1Note || ''}</td>
-            <td style="font-size:13px;color:var(--color-text-tertiary); ${checkHide(12)}">${d.bureau || ''}</td>
-            <td style="${checkHide(13)}">
+            <td style="font-size:13px;color:var(--color-text-tertiary); ${checkHide(10)}" title="${d.rd1Note || ''}">${rd1Markup}</td>
+            <td style="font-size:13px;color:var(--color-text-tertiary); ${checkHide(11)}">${d.bureau || ''}</td>
+            <td style="${checkHide(12)}">
               <div style="display:flex; align-items:center;">
                 <input type="text" id="note-${d.id}" class="note-input" value="${d.manualNote || ''}" placeholder="點擊鍵入備註...">
                 <button id="save-btn-${d.id}" class="note-save-btn" onclick="saveManualNote('${d.id}')">儲存</button>
               </div>
             </td>
-            <td style="color:var(--color-text-secondary);font-size:13px; ${checkHide(10)}" title="${d.loc || ''}">${d.loc || ''}</td>
+            <td style="color:var(--color-text-secondary);font-size:13px; ${checkHide(13)}" title="${d.loc || ''}">${d.loc || ''}</td>
+            <td style="color:var(--color-text-secondary);font-size:13px; ${checkHide(14)}" title="${d.pcdNote || ''}">${d.pcdNote || ''}</td>
 
           </tr>
         `;
       }).join('');
 
-      let dynamicColspan = 14 - hiddenColumns.size;
+      let dynamicColspan = 15 - hiddenColumns.size;
 
       if (currentFilteredData.length > 60) {
         tbody.innerHTML += `<tr><td colspan="${dynamicColspan}" style="text-align:center;color:var(--color-text-tertiary);background:var(--color-background-secondary);font-size:11px;padding:8px">💡 提示：符合五維複合條件共 ${currentFilteredData.length} 筆，已自動分流顯示前 60 筆。</td></tr>`;
@@ -812,7 +835,7 @@
     function exportFilteredTableToExcel() {
       if (!currentFilteredData || currentFilteredData.length === 0) { alert("目前沒有任何數據可以導出！"); return; }
       
-      const headers = ["工程編號", "工作單流水號", "設計員", "設計圖狀態", "交商日期", "預完日期", "預算動支別", "交商積點數", "回報狀態", "土木ok", "RD1備註", "交換局名", "手動備註", "施工地點"];
+      const headers = ["工程編號", "工作單流水號", "設計員", "設計圖狀態", "交商日期", "預完日期", "預算動支別", "交商積點數", "回報狀態", "土木ok", "RD1備註", "交換局名", "手動備註", "施工地點", "PCD施工備註"];
       const exportData = [headers];
 
       const today = new Date();
@@ -833,7 +856,7 @@
 
         let drawingStatusText = (d.designDrawing && String(d.designDrawing).trim() !== "" && !String(d.designDrawing).toLowerCase().includes("未上傳") && String(d.designDrawing).toLowerCase() !== "null") ? "已上傳" : "未上傳";
         
-        const rowData = [d.engNo, d.id, d.designer, drawingStatusText, d.handover, d.estComplete, d.budget, d.points, textStatus, d.civilOk, d.rd1Note, d.bureau, d.manualNote, d.loc];
+        const rowData = [d.engNo, d.id, d.designer, drawingStatusText, d.handover, d.estComplete, d.budget, d.points, textStatus, d.civilOk, d.rd1Note, d.bureau, d.manualNote, d.loc, d.pcdNote];
         exportData.push(rowData);
       });
 
