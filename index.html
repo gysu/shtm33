@@ -97,6 +97,116 @@
     .note-input { width: 130px; height: 26px; font-size: 12px; padding: 2px 6px; border: 0.5px solid var(--color-border-primary); border-radius: 4px; background: var(--color-background-primary); color: var(--color-text-primary); }
     .note-save-btn { font-size: 11px; font-weight: 600; padding: 4px 8px; background: var(--color-background-info); color: var(--color-text-info); border: none; border-radius: 4px; cursor: pointer; margin-left: 4px; }
     .note-save-btn:hover { opacity: 0.8; }
+
+    /* 🚀 路權關聯展開按鈕與子列樣式 */
+    .road-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--color-background-secondary);
+      border: 0.5px solid var(--color-border-secondary);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 12px;
+      color: var(--color-text-info);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+      vertical-align: middle;
+      font-family: inherit;
+    }
+    .road-toggle-btn:hover {
+      background: var(--color-background-info);
+      border-color: var(--color-border-info);
+    }
+    .road-toggle-btn.expanded {
+      background: var(--color-background-info);
+      border-color: var(--color-border-info);
+      font-weight: 600;
+    }
+    .road-toggle-btn .expand-sign {
+      font-size: 11px;
+      display: inline-block;
+      line-height: 1;
+    }
+    .road-child-row td {
+      white-space: normal !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+      background: var(--color-background-secondary) !important;
+      padding: 12px 16px !important;
+      border-bottom: 2px solid var(--color-border-primary) !important;
+    }
+    .road-card {
+      background: var(--color-background-primary);
+      border: 1px solid var(--color-border-info, #378ADD);
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+    .road-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .road-grid-cell {
+      background: var(--color-background-secondary);
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 0.5px solid var(--color-border-tertiary);
+    }
+    .road-grid-cell .label {
+      color: var(--color-text-tertiary);
+      font-size: 11px;
+      margin-bottom: 2px;
+      font-weight: 500;
+    }
+    .road-grid-cell .value {
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+    .road-history-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--color-background-primary);
+      border-radius: 6px;
+      overflow: hidden;
+      font-size: 12px;
+      border: 0.5px solid var(--color-border-tertiary);
+      margin-top: 6px;
+    }
+    .road-history-table th {
+      background: var(--color-background-secondary);
+      text-align: left;
+      padding: 6px 10px;
+      color: var(--color-text-secondary);
+      font-weight: 600;
+      border-bottom: 1px solid var(--color-border-secondary);
+    }
+    .road-history-table td {
+      padding: 6px 10px;
+      border-bottom: 0.5px solid var(--color-border-tertiary);
+      white-space: nowrap;
+    }
+    .road-link-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--color-background-info);
+      color: var(--color-text-info);
+      text-decoration: none;
+      border: 0.5px solid var(--color-border-info);
+      transition: opacity 0.15s ease;
+    }
+    .road-link-pill:hover {
+      opacity: 0.85;
+    }
   </style>
   <style id="mcp-host-variables">
     :root {
@@ -207,7 +317,7 @@
     </div>
     
     <div class="filter-section-title">🔍 智慧手動輸入篩選器：</div>
-    <input type="text" id="txt-search" class="search-input-box" placeholder="輸入工程編號、工單流水號... (輸入「未上傳」可篩選出未交圖工單；輸入「有備註」可篩選出已有備註之工單)">
+    <input type="text" id="txt-search" class="search-input-box" placeholder="輸入工程編號、流水號、地點、路權編號、廠商... (可輸入「未上傳」、「有備註」、「有路權」)">
 
     <div class="filter-section-title">🏗️ 工程編號篩選 (支援複選)：</div>
     <div class="filter-row" id="filter-engno-toggle-btns"></div>
@@ -227,6 +337,7 @@
       <button class="filter-btn" data-status="pending">施工/未回報</button>
       <button class="filter-btn" data-status="drawing_uploaded">圖已上傳</button>
       <button class="filter-btn" data-status="drawing_not_uploaded">❌圖未上傳</button>
+      <button class="filter-btn" data-status="has_road">🛣️ 有路權編號</button>
     </div>
 
     <div class="filter-section-title" style="color:var(--color-text-info)">📋 智慧欄位顯示顯示/切換開關 (點擊可靈活隱藏欄位，防爆破版)：</div>
@@ -241,7 +352,7 @@
       <button class="filter-btn active" data-col="7" onclick="toggleColumn(7)">📊 交商積點</button>
       <button class="filter-btn active" data-col="8" onclick="toggleColumn(8)">完工狀態</button>
       <button class="filter-btn active" data-col="9" onclick="toggleColumn(9)">🏗️ 土木ok</button>
-      <button class="filter-btn active" data-col="10" onclick="toggleColumn(10)">📜 RD1備註</button>
+      <button class="filter-btn active" data-col="10" onclick="toggleColumn(10)">📜 RD1備註(路權)</button>
       <button class="filter-btn active" data-col="11" onclick="toggleColumn(11)">🏢 所屬交換局</button>
       <button class="filter-btn active" data-col="12" onclick="toggleColumn(12)">📝 手動備註欄</button>
       <button class="filter-btn active" data-col="13" onclick="toggleColumn(13)">📍 施工地點</button>
@@ -262,7 +373,7 @@
             <th style="width:75px;text-align:right">交商積點</th>
             <th style="width:110px;text-align:center">完工狀態</th>
             <th style="width:70px;text-align:center;background:var(--color-background-success);color:var(--color-text-success)">🏗️ 土木ok</th>
-            <th style="width:90px">RD1備註</th>
+            <th style="width:160px">RD1備註 (路權)</th>
             <th style="width:110px">所屬交換局名</th>
             <th style="width:160px; background:var(--color-background-info)">📝 手動備註</th>
             <th style="width:200px">施工地點</th>
@@ -283,6 +394,9 @@
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby7sU7gz5mCfFSWbTS0TjkfpqeKxQgAZZwKSBwlz-gJE56hrIzFo5l1--w1-VbnsAE/exec";
 
     let globalData = [];
+    let globalRoadMasterData = {};
+    let globalRoadDetailData = {};
+    let expandedRoadRows = new Set();
     let currentFilteredData = [];     
     let selectedEngNos = new Set();    
     let selectedBudgets = new Set();   
@@ -291,9 +405,94 @@
     let selectedBureaus = new Set();   
     let textSearchQuery = ""; 
     
-    // 🚀 補全功能：直欄控制狀態管理陣列與精準寬度定義表（15欄總合 1980px）
+    // 🚀 補全功能：直欄控制狀態管理陣列與精準寬度定義表（15欄總合 2000px）
     let hiddenColumns = new Set();
-    const columnWidths = [110, 100, 75, 120, 85, 85, 150, 75, 130, 90, 140, 110, 210, 200, 200];
+    const columnWidths = [110, 100, 75, 120, 85, 85, 150, 75, 130, 90, 160, 110, 210, 200, 200];
+
+    // ==========================================
+    // 🛠️ 路權關聯與日期輔助函式
+    // ==========================================
+    function parseTaiwanDate(dateStr) {
+      if (!dateStr) return null;
+      let str = String(dateStr).trim();
+      const twMatch = str.match(/(\d+)年(\d+)月(\d+)日?/);
+      if (twMatch) {
+        let y = parseInt(twMatch[1], 10);
+        if (y < 1911) y += 1911; 
+        let m = parseInt(twMatch[2], 10) - 1; 
+        let d = parseInt(twMatch[3], 10);
+        return new Date(y, m, d);
+      }
+      str = str.replace(/[-\.]/g, '/').replace(/\s+/g, '');
+      if (/^\d{6,8}$/.test(str)) {
+        let yLen = str.length >= 7 ? str.length - 4 : 2; 
+        let y = parseInt(str.substring(0, yLen), 10);
+        if (y < 1911) y += 1911;
+        let m = parseInt(str.substring(yLen, yLen+2), 10) - 1; 
+        let d = parseInt(str.substring(yLen+2, yLen+4), 10);
+        return new Date(y, m, d);
+      }
+      let parts = str.split('/');
+      if (parts.length >= 3) {
+        let y = parseInt(parts[0], 10);
+        if (y < 1911) y += 1911; 
+        let m = parseInt(parts[1], 10) - 1;
+        let d = parseInt(parts[2], 10);
+        return new Date(y, m, d);
+      }
+      let fb = new Date(dateStr);
+      return isNaN(fb.getTime()) ? null : fb;
+    }
+
+    function parseHyperlink(formula) {
+      if (!formula) return { url: '', label: '' };
+      const str = String(formula).trim();
+      const match = str.match(/=HYPERLINK\("([^"]+)"\s*,\s*"([^"]+)"\)/i);
+      if (match) {
+        return { url: match[1], label: match[2] };
+      }
+      return { url: '', label: str };
+    }
+
+    function formatGoogleSerialDate(serial) {
+      const num = Number(serial);
+      if (isNaN(num)) return String(serial).trim();
+      const origin = new Date(Date.UTC(1899, 11, 30));
+      const targetDate = new Date(origin.getTime() + num * 24 * 60 * 60 * 1000);
+      let year = targetDate.getUTCFullYear();
+      const month = targetDate.getUTCMonth() + 1;
+      const day = targetDate.getUTCDate();
+      let rocYear = year >= 1911 ? year - 1911 : year;
+      const paddedYear = String(rocYear).padStart(3, '0');
+      const paddedMonth = String(month).padStart(2, '0');
+      const paddedDay = String(day).padStart(2, '0');
+      return `${paddedYear}年${paddedMonth}月${paddedDay}日`;
+    }
+
+    function cleanDateVal(val) {
+      if (!val) return '';
+      let str = String(val).trim();
+      if (str.startsWith("=")) {
+        str = parseHyperlink(str).label;
+      }
+      if (/^-?\d+$/.test(str)) {
+        return formatGoogleSerialDate(str);
+      }
+      return str;
+    }
+
+    function extractRoadCaseNo(rd1Note) {
+      if (!rd1Note) return null;
+      const str = String(rd1Note).trim();
+      if (!str || str === '---' || str.toLowerCase() === 'null') return null;
+      if (globalRoadMasterData[str]) return str;
+      const m10 = str.match(/\b\d{10}\b/);
+      if (m10) return m10[0];
+      const appNoMatch = str.match(/AppNo=([A-Za-z0-9]+)/i);
+      if (appNoMatch) return appNoMatch[1];
+      if (str.length === 10) return str;
+      return null;
+    }
 
     let statusChartInstance = null;
     let pointsChartInstance = null;
@@ -338,17 +537,161 @@
     }
 
     async function fetchCloudSheetsData(spreadsheetId, apiKey) {
-      document.getElementById('loading-indicator').innerText = "🔄 密碼驗證成功！載入最新試算表資料中...";
+      document.getElementById('loading-indicator').innerText = "🔄 密碼驗證成功！載入最新工單與路權資料中...";
       const encodedRange = encodeURIComponent(CONFIG_RANGE);
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodedRange}?key=${apiKey}`;
+      
+      const workOrdersUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodedRange}?key=${apiKey}`;
+      const roadMasterUrl = `https://sheets.googleapis.com/v4/spreadsheets/1d84D9IYuJIdyXwIicYCGFb9TKp9ar9h4xfl5A4Nq2b0/values/${encodeURIComponent("工作表1!A:ZZ")}?key=${apiKey}&valueRenderOption=FORMULA`;
+      const roadDetailUrl = `https://sheets.googleapis.com/v4/spreadsheets/1d_VIQGF3QftLt0kGPsgNnFS6JnM7wUMJECPz6cqrAXo/values/${encodeURIComponent("施工紀錄明細表!A:ZZ")}?key=${apiKey}&valueRenderOption=FORMULA`;
 
       try {
-        const response = await fetch(url);
-        const json = await response.json();
-        if (json.error) throw new Error(json.error.message);
+        const [wRes, rmRes, rdRes] = await Promise.all([
+          fetch(workOrdersUrl).then(r => r.json()),
+          fetch(roadMasterUrl).then(r => r.json()),
+          fetch(roadDetailUrl).then(r => r.json())
+        ]);
 
-        const headers = json.values[0].map(h => h ? String(h).trim() : '');
-        const rows = json.values.slice(1);
+        if (wRes.error) throw new Error("工單試算表讀取失敗: " + wRes.error.message);
+        if (!wRes.values || wRes.values.length === 0) throw new Error("工單試算表內查無資料。");
+
+        // --- 1. 解析路權打卡明細 (Detail Sheet) ---
+        globalRoadDetailData = {};
+        if (rdRes && rdRes.values && rdRes.values.length > 1) {
+          const rdHeaders = rdRes.values[0].map(h => h ? String(h).trim() : '');
+          const getRdIdx = (kw) => rdHeaders.findIndex(h => h.includes(kw));
+          const dIdxRecordDate = getRdIdx('打卡紀錄日');
+          const dIdxCaseNo = getRdIdx('案件編號');
+          const dIdxCheckIn = getRdIdx('進場狀態');
+          const dIdxCheckOut = getRdIdx('退場狀態');
+          const dIdxWorkDate = getRdIdx('施工日期');
+          const dIdxNote = getRdIdx('備註');
+
+          rdRes.values.slice(1).forEach(row => {
+            const getCell = idx => (idx !== -1 && idx < row.length && row[idx] !== undefined) ? String(row[idx]).trim() : '';
+            const getClean = idx => {
+              const val = getCell(idx);
+              return val.startsWith('=') ? parseHyperlink(val).label : val;
+            };
+
+            const caseNo = getClean(dIdxCaseNo);
+            if (!caseNo) return;
+
+            if (!globalRoadDetailData[caseNo]) {
+              globalRoadDetailData[caseNo] = [];
+            }
+            globalRoadDetailData[caseNo].push({
+              recordDate: cleanDateVal(getCell(dIdxRecordDate)),
+              checkIn: getCell(dIdxCheckIn),
+              checkOut: getCell(dIdxCheckOut),
+              workDate: cleanDateVal(getCell(dIdxWorkDate)),
+              note: getCell(dIdxNote)
+            });
+          });
+
+          // 排序：依打卡紀錄日降序
+          for (let key in globalRoadDetailData) {
+            globalRoadDetailData[key].sort((a, b) => {
+              const dateA = parseTaiwanDate(a.recordDate) || new Date(0);
+              const dateB = parseTaiwanDate(b.recordDate) || new Date(0);
+              return dateB - dateA;
+            });
+          }
+        }
+
+        // --- 2. 解析路權案件主檔 (Master Sheet) ---
+        globalRoadMasterData = {};
+        if (rmRes && rmRes.values && rmRes.values.length > 1) {
+          const rmHeaders = rmRes.values[0].map(h => h ? String(h).trim() : '');
+          const getColIdx = (keywords) => {
+            for (let kw of keywords) {
+              const exactIdx = rmHeaders.findIndex(h => h === kw);
+              if (exactIdx !== -1) return exactIdx;
+            }
+            for (let kw of keywords) {
+              const includeIdx = rmHeaders.findIndex(h => h.includes(kw));
+              if (includeIdx !== -1) return includeIdx;
+            } 
+            return -1;
+          };
+
+          const idxCaseNo = getColIdx(['案件編號']);
+          const idxPurpose = getColIdx(['施工目的']);
+          const idxStatus = getColIdx(['申請狀態']);
+          const idxApplicant = getColIdx(['申請人']);
+          const idxLocation = getColIdx(['挖掘地點']);
+          const idxContractor = getColIdx(['施工廠商']);
+          const idxSupervisor = getColIdx(['監工資訊']);
+          const idxNote = getColIdx(['備註']);       
+          const idxNote1 = getColIdx(['備註1']);     
+          const idxCaseType = getColIdx(['案件類型']);
+          const idxAuthUnit = getColIdx(['路權單位']);
+          const idxPermitStart = getColIdx(['路證日期起']);
+          const idxPermitEnd = getColIdx(['路證日期迄']);
+          const idxCompReqDate = getColIdx(['完工申請日']);
+          const idxManualNote = getColIdx(['手動備註']);
+          const idxLocMap = getColIdx(['地點']);
+          const idxDesign = getColIdx(['設計圖連結']);
+
+          const todayZero = new Date();
+          todayZero.setHours(0, 0, 0, 0);
+
+          rmRes.values.slice(1).forEach(row => {
+            const getCell = idx => (idx !== -1 && idx < row.length && row[idx] !== undefined) ? String(row[idx]).trim() : '';
+            const getClean = idx => {
+              const val = getCell(idx);
+              return val.startsWith('=') ? parseHyperlink(val).label : val;
+            };
+
+            const caseNo = getClean(idxCaseNo);
+            if (!caseNo) return;
+
+            let statusVal = getClean(idxStatus) || '未指派';
+            let permitEndVal = cleanDateVal(getCell(idxPermitEnd));
+            let note = getClean(idxNote);
+            if (note === 'NaN' || note === 'null') note = '';
+            let note1 = getClean(idxNote1);
+            if (note1 === 'NaN' || note1 === 'null') note1 = '';
+
+            let isExpiringSoon = false;
+            let isOverdue = false;
+            let isCompletedOrCanceled = statusVal.includes('完工') || statusVal.includes('退') || statusVal.includes('已刪除') || statusVal.includes('已註銷') || statusVal.includes('已結案') || statusVal.includes('作廢');
+
+            if (!isCompletedOrCanceled && permitEndVal) {
+              let pEnd = parseTaiwanDate(permitEndVal);
+              if (pEnd) {
+                let diffDays = Math.ceil((pEnd.getTime() - todayZero.getTime()) / (1000 * 3600 * 24));
+                if (diffDays < 0) isOverdue = true;               
+                else if (diffDays <= 14) isExpiringSoon = true;   
+              }
+            }
+
+            globalRoadMasterData[caseNo] = {
+              caseNo: caseNo,
+              purpose: getClean(idxPurpose) || '未填寫',
+              status: statusVal,
+              applicant: getClean(idxApplicant) || '未填寫',
+              location: getClean(idxLocation),
+              contractor: getClean(idxContractor) || '未知廠商',
+              supervisor: getClean(idxSupervisor),
+              note: note,
+              note1: note1,
+              caseType: getClean(idxCaseType) || '未分類',
+              authUnit: getClean(idxAuthUnit) || '未知單位',
+              permitStart: cleanDateVal(getCell(idxPermitStart)),
+              permitEnd: permitEndVal,
+              compReqDate: cleanDateVal(getCell(idxCompReqDate)),
+              manualNote: getClean(idxManualNote),
+              isExpiringSoon: isExpiringSoon, 
+              isOverdue: isOverdue,
+              locMap: getCell(idxLocMap),
+              design: getCell(idxDesign)
+            };
+          });
+        }
+
+        // --- 3. 解析工程工單明細 (Work Orders Sheet) ---
+        const headers = wRes.values[0].map(h => h ? String(h).trim() : '');
+        const rows = wRes.values.slice(1);
 
         const idxEngNo = headers.indexOf('工程編號');
         const idxId = headers.indexOf('工作單流水號');
@@ -369,7 +712,7 @@
           idxPcdNote = headers.findIndex(h => h.includes('PCD') || h.includes('施工備註'));
         }
         if (idxPcdNote === -1 && headers.length > 11) {
-          idxPcdNote = 11; // L column fallback
+          idxPcdNote = 11;
         }
 
         let idxDesignDrawing = headers.indexOf('設計圖上傳'); 
@@ -406,7 +749,7 @@
         document.getElementById('loading-indicator').style.display = 'none';
         calculateAndRenderDashboard();
       } catch (error) {
-        document.getElementById('loading-indicator').innerHTML = `❌ <b>資料同步失敗</b>：無法從試算表下載內容 (${error.message})`;
+        document.getElementById('loading-indicator').innerHTML = `❌ <b>資料同步或解析失敗</b>：${error.message}`;
       }
     }
 
@@ -616,6 +959,48 @@
       } catch (err) { alert("網路連線失敗：" + err.message); saveBtn.innerText = "儲存"; saveBtn.disabled = false; }
     }
 
+    async function saveRoadManualNote(caseNo) {
+      const noteInput = document.getElementById(`road-note-${caseNo}`);
+      const saveBtn = document.getElementById(`road-save-btn-${caseNo}`);
+      if (!noteInput) return;
+      const noteValue = noteInput.value.trim();
+      
+      const ROAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby8J8wBMI4feKyITveSOTNfTUz0jNimhB2TmxXR0KnLGw458FenqFYDMqY3p2fmIR2_sA/exec";
+      saveBtn.innerText = "⏳ 寫入"; saveBtn.disabled = true;
+      try {
+        const fetchUrl = `${ROAD_APPS_SCRIPT_URL}?id=${encodeURIComponent(caseNo)}&note=${encodeURIComponent(noteValue)}`;
+        const response = await fetch(fetchUrl);
+        if (!response.ok) throw new Error(`HTTP 錯誤: ${response.status}`);
+        const text = await response.text();
+        let resJson;
+        try {
+          resJson = JSON.parse(text);
+        } catch (e) {
+          throw new Error("試算表回傳格式錯誤，請確認 Apps Script 權限。");
+        }
+        if (resJson.status === 'success') {
+          saveBtn.innerText = "✅ 成功"; saveBtn.style.background = "var(--color-border-success)";
+          if (globalRoadMasterData[caseNo]) {
+            globalRoadMasterData[caseNo].manualNote = noteValue;
+          }
+          setTimeout(() => { 
+            saveBtn.innerText = "儲存"; 
+            saveBtn.style.background = "var(--color-background-info)"; 
+            saveBtn.disabled = false; 
+            renderTable();
+          }, 1200);
+        } else { 
+          alert("寫入失敗：" + resJson.message); 
+          saveBtn.innerText = "儲存"; 
+          saveBtn.disabled = false; 
+        }
+      } catch (err) { 
+        alert("網路連線失敗：" + err.message); 
+        saveBtn.innerText = "儲存"; 
+        saveBtn.disabled = false; 
+      }
+    }
+
     async function saveCivilStatus(id, isChecked) {
       const statusSpan = document.getElementById(`civil-status-${id}`); const checkbox = document.getElementById(`civil-${id}`);
       if (!statusSpan || !checkbox) return;
@@ -659,6 +1044,158 @@
       });
     }
 
+    function toggleRoadRow(id, caseNo, event) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      if (expandedRoadRows.has(id)) {
+        expandedRoadRows.delete(id);
+      } else {
+        expandedRoadRows.add(id);
+      }
+      renderTable();
+    }
+
+    function renderRoadDetailCard(caseNo, d) {
+      const road = globalRoadMasterData[caseNo];
+      const details = globalRoadDetailData[caseNo] || [];
+
+      if (!road) {
+        return `
+          <div class="road-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div style="font-size:13px; color:var(--color-text-primary);">
+                <b>🛣️ 路權案件編號：</b><span style="font-family:monospace; font-weight:700; color:var(--color-text-info);">${caseNo}</span>
+                <span style="color:var(--color-text-tertiary); margin-left:8px;">(此案件尚未在路權試算表建檔或正在同步中)</span>
+              </div>
+              <a href="https://pwd.yunlin.gov.tw/YLPipe/CaseState?AppNo=${encodeURIComponent(caseNo)}" target="_blank" rel="noopener noreferrer" class="road-link-pill">
+                🌐 前往雲林管線挖掘系統查看 ↗
+              </a>
+            </div>
+          </div>
+        `;
+      }
+
+      let permitBadge = '';
+      if (road.isOverdue) {
+        permitBadge = `<span class="tag" style="background:var(--color-background-danger); color:var(--color-text-danger); font-weight:700; border: 0.5px solid var(--color-border-danger, rgba(167,61,57,0.5));">❌ 路證已逾期</span>`;
+      } else if (road.isExpiringSoon) {
+        permitBadge = `<span class="tag" style="background:var(--color-background-warning); color:var(--color-text-warning); font-weight:700;">⚠️ 即將逾期</span>`;
+      } else if (road.permitEnd) {
+        permitBadge = `<span class="tag" style="background:var(--color-background-success); color:var(--color-text-success);">✅ 路證期間正常</span>`;
+      }
+
+      let statusTagHtml = '';
+      if (road.status.includes('完工')) statusTagHtml = `<span class="tag" style="background:var(--color-background-success); color:var(--color-text-success);">${road.status}</span>`;
+      else if (road.status.includes('退件') || road.status.includes('退回') || road.status.includes('停工') || road.status.includes('作廢')) statusTagHtml = `<span class="tag" style="background:var(--color-background-danger); color:var(--color-text-danger);">${road.status}</span>`;
+      else if (road.status.includes('發證') || road.status.includes('核准') || road.status.includes('同意') || road.status.includes('施工中')) statusTagHtml = `<span class="tag" style="background:var(--color-background-info); color:var(--color-text-info);">${road.status}</span>`;
+      else statusTagHtml = `<span class="tag" style="background:var(--color-background-secondary); color:var(--color-text-secondary);">${road.status}</span>`;
+
+      const parsedLoc = parseHyperlink(road.locMap);
+      let locMarkup = road.location || '未填寫';
+      if (parsedLoc.url) {
+        locMarkup += ` <a href="${parsedLoc.url}" target="_blank" rel="noopener noreferrer" style="text-decoration:none; margin-left:6px;" title="查看地圖">🗺️ 地圖</a>`;
+      }
+
+      const parsedDesign = parseHyperlink(road.design);
+      let designMarkup = '';
+      if (parsedDesign.url) {
+        designMarkup = `<a href="${parsedDesign.url}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;"><span class="tag" style="background:#e3f2fd; color:#0b66c2; border:1px solid #bbdefb; font-weight:600;">📐 查看設計圖</span></a>`;
+      }
+
+      let historyTableHtml = '';
+      if (details.length > 0) {
+        historyTableHtml = `
+          <div style="margin-top: 12px;">
+            <div style="font-weight: 600; font-size: 12px; margin-bottom: 6px; color: var(--color-text-info); display: flex; align-items: center; gap: 6px;">
+              <span>📅 歷史施工打卡紀錄 (共 ${details.length} 筆)：</span>
+            </div>
+            <table class="road-history-table">
+              <thead>
+                <tr>
+                  <th style="width: 110px;">打卡紀錄日</th>
+                  <th style="width: 110px;">進場狀態</th>
+                  <th style="width: 110px;">退場狀態</th>
+                  <th style="width: 110px;">施工日期</th>
+                  <th>打卡備註</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${details.map(item => {
+                  const parsedIn = parseHyperlink(item.checkIn);
+                  let inHtml = parsedIn.url ? `<a href="${parsedIn.url}" target="_blank" style="text-decoration:none;"><span class="tag" style="background:#e8f5e9; color:#1e8e3e; border:1px solid #c8e6c9;">📸 ${parsedIn.label}</span></a>` : `<span class="tag" style="background:var(--color-background-secondary); color:var(--color-text-secondary);">${parsedIn.label || '無'}</span>`;
+                  const parsedOut = parseHyperlink(item.checkOut);
+                  let outHtml = parsedOut.url ? `<a href="${parsedOut.url}" target="_blank" style="text-decoration:none;"><span class="tag" style="background:#e8f5e9; color:#1e8e3e; border:1px solid #c8e6c9;">📸 ${parsedOut.label}</span></a>` : `<span class="tag" style="background:var(--color-background-secondary); color:var(--color-text-secondary);">${parsedOut.label || '無'}</span>`;
+                  return `
+                    <tr>
+                      <td style="font-family: monospace;">${item.recordDate || ''}</td>
+                      <td>${inHtml}</td>
+                      <td>${outHtml}</td>
+                      <td style="font-family: monospace;">${item.workDate || '無'}</td>
+                      <td style="color: var(--color-text-secondary);">${item.note || ''}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      } else {
+        historyTableHtml = `<div style="margin-top: 8px; font-size: 12px; color: var(--color-text-tertiary);">📝 尚無施工打卡紀錄</div>`;
+      }
+
+      return `
+        <div class="road-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border-tertiary); padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <span style="font-size: 14px; font-weight: 700; color: var(--color-text-info);">🛣️ 路權案件編號：<span style="font-family: monospace; font-size: 15px;">${road.caseNo}</span></span>
+              ${statusTagHtml}
+              ${permitBadge}
+              <span class="tag" style="background: var(--color-background-secondary); color: var(--color-text-secondary);">${road.caseType || '一般案件'}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              ${designMarkup}
+              <a href="https://pwd.yunlin.gov.tw/YLPipe/CaseState?AppNo=${encodeURIComponent(road.caseNo)}" target="_blank" rel="noopener noreferrer" class="road-link-pill">
+                🌐 雲林管線挖掘系統 ↗
+              </a>
+            </div>
+          </div>
+
+          <div class="road-grid">
+            <div class="road-grid-cell">
+              <div class="label">路權單位 / 施工目的</div>
+              <div class="value">${road.authUnit} · ${road.purpose}</div>
+            </div>
+            <div class="road-grid-cell">
+              <div class="label">施工廠商 / 申請人 / 監工</div>
+              <div class="value" style="font-weight:500;">${road.contractor} · 申:${road.applicant} ${road.supervisor ? '· 監:' + road.supervisor : ''}</div>
+            </div>
+            <div class="road-grid-cell">
+              <div class="label">路證日期起迄 / 完工申請日</div>
+              <div class="value" style="font-family: monospace; font-weight: 500;">${road.permitStart || '---'} ～ ${road.permitEnd || '---'} ${road.compReqDate ? '(完工申:' + road.compReqDate + ')' : ''}</div>
+            </div>
+            <div class="road-grid-cell">
+              <div class="label">挖掘地點</div>
+              <div class="value" style="font-weight:500;">${locMarkup}</div>
+            </div>
+          </div>
+
+          <div style="background: var(--color-background-secondary); padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 10px; color: var(--color-text-secondary); line-height: 1.5; border: 0.5px solid var(--color-border-tertiary);">
+            ${road.note ? `<div><b>📌 公所/系統備註：</b>${road.note}</div>` : ''}
+            ${road.note1 ? `<div><b>📌 備註1：</b>${road.note1}</div>` : ''}
+            <div style="display:flex; align-items:center; margin-top:6px; gap:6px; flex-wrap:wrap;">
+              <b style="color:var(--color-text-primary);">📝 路權手動備註：</b>
+              <input type="text" id="road-note-${road.caseNo}" class="note-input" style="flex:1; min-width:200px; max-width:400px;" value="${road.manualNote || ''}" placeholder="輸入路權手動備註...">
+              <button id="road-save-btn-${road.caseNo}" class="note-save-btn" onclick="saveRoadManualNote('${road.caseNo}')">儲存</button>
+            </div>
+          </div>
+
+          ${historyTableHtml}
+        </div>
+      `;
+    }
+
     function renderTable() {
       syncFilterUIStyles();
 
@@ -669,6 +1206,11 @@
       const todayNum = parseInt(`${minguoYear}${mm}${dd}`, 10);
 
       currentFilteredData = globalData.filter(d => {
+        const caseNo = extractRoadCaseNo(d.rd1Note);
+        const roadInfo = caseNo ? globalRoadMasterData[caseNo] : null;
+        const roadSearchText = roadInfo ? `${roadInfo.caseNo} ${roadInfo.status} ${roadInfo.purpose} ${roadInfo.authUnit} ${roadInfo.contractor} ${roadInfo.applicant} ${roadInfo.location} ${roadInfo.note} ${roadInfo.note1} ${roadInfo.manualNote}` : '';
+        const hasRoadTag = caseNo ? "有路權 路權編號 有路證" : "";
+
         const hasManualNoteText = (d.manualNote && String(d.manualNote).trim() !== "") ? "已備註 有備註" : "";
         const drawingVal = d.designDrawing ? String(d.designDrawing).trim() : "";
         const drawingFilterText = (drawingVal === "" || drawingVal.toLowerCase().includes("未上傳") || drawingVal.toLowerCase() === "null") ? "未上傳 無設計圖" : "已上傳 有設計圖";
@@ -686,6 +1228,8 @@
           (d.manualNote && String(d.manualNote).toLowerCase().includes(textSearchQuery)) || 
           (d.civilOk && String(d.civilOk).toLowerCase().includes(textSearchQuery)) || 
           (d.bureau && String(d.bureau).toLowerCase().includes(textSearchQuery)) ||
+          roadSearchText.toLowerCase().includes(textSearchQuery) ||
+          hasRoadTag.includes(textSearchQuery) ||
           hasManualNoteText.includes(textSearchQuery) ||
           drawingFilterText.includes(textSearchQuery);
 
@@ -703,10 +1247,12 @@
 
         const hasJobStatusFilter = [...selectedStatuses].some(s => ['completed', 'overdue', 'delayed', 'pending'].includes(s));
         const hasDrawingStatusFilter = [...selectedStatuses].some(s => ['drawing_uploaded', 'drawing_not_uploaded'].includes(s));
+        const hasRoadStatusFilter = selectedStatuses.has('has_road');
 
         const matchJob = !hasJobStatusFilter || selectedStatuses.has(normStatus);
         const matchDrawing = !hasDrawingStatusFilter || selectedStatuses.has(drawingStatus);
-        const matchesStatus = matchJob && matchDrawing;
+        const matchRoad = !hasRoadStatusFilter || !!caseNo;
+        const matchesStatus = matchJob && matchDrawing && matchRoad;
 
         let bName = d.bureau ? String(d.bureau).replace('雲林', '').trim() : '';
         const matchesBureau = (selectedBureaus.size === 0) || selectedBureaus.has(bName);
@@ -758,6 +1304,8 @@
       if(!tbody) return;
       const renderLimit = currentFilteredData.slice(0, 60); 
 
+      let dynamicColspan = 15 - hiddenColumns.size;
+
       tbody.innerHTML = renderLimit.map(d => {
         const drawingVal = d.designDrawing ? String(d.designDrawing).trim() : "";
         let drawingMarkup = "";
@@ -768,10 +1316,37 @@
           drawingMarkup = `<span style="color:var(--color-text-danger); font-weight:600; font-size:13px;">❌ 未上傳</span>`;
         }
 
-        const rd1Val = d.rd1Note ? String(d.rd1Note).trim() : "";
+        const caseNo = extractRoadCaseNo(d.rd1Note);
+        const isExpanded = expandedRoadRows.has(d.id);
         let rd1Markup = d.rd1Note || '';
-        if (rd1Val.length === 10) {
-          rd1Markup = `<a href="https://pwd.yunlin.gov.tw/YLPipe/CaseState?AppNo=${encodeURIComponent(rd1Val)}" target="_blank" rel="noopener noreferrer" style="color:var(--color-text-info); text-decoration:underline; font-weight:500;">${d.rd1Note}</a>`;
+
+        if (caseNo) {
+          const expandSign = isExpanded ? '➖' : '➕';
+          const isRoadMatch = !!globalRoadMasterData[caseNo];
+          const btnTitle = isRoadMatch ? `點擊${isExpanded ? '收合' : '展開'}路權資料 (${globalRoadMasterData[caseNo].status})` : `點擊${isExpanded ? '收合' : '展開'}路權案件資訊`;
+
+          rd1Markup = `
+            <div style="display:inline-flex; align-items:center; gap:4px; max-width:100%;">
+              <button class="road-toggle-btn ${isExpanded ? 'expanded' : ''}" onclick="toggleRoadRow('${d.id}', '${caseNo}', event)" title="${btnTitle}">
+                <span class="expand-sign">${expandSign}</span>
+                <span style="font-family:monospace; font-weight:600;">${caseNo}</span>
+              </button>
+              <a href="https://pwd.yunlin.gov.tw/YLPipe/CaseState?AppNo=${encodeURIComponent(caseNo)}" target="_blank" rel="noopener noreferrer" style="color:var(--color-text-info); font-size:11px; text-decoration:none; padding:2px 4px; border-radius:3px; background:var(--color-background-info);" title="開啟雲林管線挖掘系統案件">🔗</a>
+            </div>
+          `;
+        } else if (d.rd1Note && String(d.rd1Note).trim() !== '' && String(d.rd1Note).trim() !== '---') {
+          rd1Markup = `<span style="font-size:12px; color:var(--color-text-secondary);">${d.rd1Note}</span>`;
+        }
+
+        let childRowMarkup = '';
+        if (caseNo && isExpanded) {
+          childRowMarkup = `
+            <tr class="road-child-row" id="road-child-${d.id}">
+              <td colspan="${dynamicColspan}">
+                ${renderRoadDetailCard(caseNo, d)}
+              </td>
+            </tr>
+          `;
         }
 
         return `
@@ -794,7 +1369,6 @@
                 <span id="civil-status-${d.id}" style="font-size:11px;"></span>
               </div>
             </td>
-            
 
             <td style="font-size:13px;color:var(--color-text-tertiary); ${checkHide(10)}" title="${d.rd1Note || ''}">${rd1Markup}</td>
             <td style="font-size:13px;color:var(--color-text-tertiary); ${checkHide(11)}">${d.bureau || ''}</td>
@@ -806,12 +1380,10 @@
             </td>
             <td style="color:var(--color-text-secondary);font-size:13px; ${checkHide(13)}" title="${d.loc || ''}">${d.loc || ''}</td>
             <td style="color:var(--color-text-secondary);font-size:13px; ${checkHide(14)}" title="${d.pcdNote || ''}">${d.pcdNote || ''}</td>
-
           </tr>
+          ${childRowMarkup}
         `;
       }).join('');
-
-      let dynamicColspan = 15 - hiddenColumns.size;
 
       if (currentFilteredData.length > 60) {
         tbody.innerHTML += `<tr><td colspan="${dynamicColspan}" style="text-align:center;color:var(--color-text-tertiary);background:var(--color-background-secondary);font-size:11px;padding:8px">💡 提示：符合五維複合條件共 ${currentFilteredData.length} 筆，已自動分流顯示前 60 筆。</td></tr>`;
@@ -835,7 +1407,7 @@
     function exportFilteredTableToExcel() {
       if (!currentFilteredData || currentFilteredData.length === 0) { alert("目前沒有任何數據可以導出！"); return; }
       
-      const headers = ["工程編號", "工作單流水號", "設計員", "設計圖狀態", "交商日期", "預完日期", "預算動支別", "交商積點數", "回報狀態", "土木ok", "RD1備註", "交換局名", "手動備註", "施工地點", "PCD施工備註"];
+      const headers = ["工程編號", "工作單流水號", "設計員", "設計圖狀態", "交商日期", "預完日期", "預算動支別", "交商積點數", "回報狀態", "土木ok", "RD1備註", "路權案件編號", "路權申請狀態", "路權單位", "路權廠商", "路證有效起迄", "路權手動備註", "交換局名", "手動備註", "施工地點", "PCD施工備註"];
       const exportData = [headers];
 
       const today = new Date();
@@ -856,7 +1428,15 @@
 
         let drawingStatusText = (d.designDrawing && String(d.designDrawing).trim() !== "" && !String(d.designDrawing).toLowerCase().includes("未上傳") && String(d.designDrawing).toLowerCase() !== "null") ? "已上傳" : "未上傳";
         
-        const rowData = [d.engNo, d.id, d.designer, drawingStatusText, d.handover, d.estComplete, d.budget, d.points, textStatus, d.civilOk, d.rd1Note, d.bureau, d.manualNote, d.loc, d.pcdNote];
+        const caseNo = extractRoadCaseNo(d.rd1Note) || '';
+        const road = caseNo ? globalRoadMasterData[caseNo] : null;
+        const roadStatus = road ? road.status : '';
+        const roadAuth = road ? road.authUnit : '';
+        const roadContractor = road ? road.contractor : '';
+        const roadPermitRange = road ? `${road.permitStart || ''} ~ ${road.permitEnd || ''}` : '';
+        const roadManualNote = road ? road.manualNote : '';
+
+        const rowData = [d.engNo, d.id, d.designer, drawingStatusText, d.handover, d.estComplete, d.budget, d.points, textStatus, d.civilOk, d.rd1Note, caseNo, roadStatus, roadAuth, roadContractor, roadPermitRange, roadManualNote, d.bureau, d.manualNote, d.loc, d.pcdNote];
         exportData.push(rowData);
       });
 
