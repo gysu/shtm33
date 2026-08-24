@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>電信工程施工進度_v2.7</title>
+  <title>電信工程施工進度_v2.9 </title>
   <style id="mcp-host-fonts">
     @font-face {
       font-family: "Anthropic Sans";
@@ -61,9 +61,9 @@
     .two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.25rem; margin-bottom: 1rem; }
     
     .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 12px; padding: 4px 6px; border-radius: 6px; transition: all 0.1s ease; border: 0.5px solid transparent; }
-    #budget-bars .bar-row, #bureau-bars .bar-row, #purpose-bars .bar-row { cursor: pointer; }
-    #budget-bars .bar-row:hover, #bureau-bars .bar-row:hover, #purpose-bars .bar-row:hover { background: var(--color-background-secondary); }
-    #budget-bars .bar-row.active, #bureau-bars .bar-row.active, #purpose-bars .bar-row.active { background: var(--color-background-info); border-color: var(--color-border-info); font-weight: 500; }
+    #budget-bars .bar-row, #bureau-bars .bar-row, #purpose-bars .bar-row, #designer-bars .bar-row { cursor: pointer; }
+    #budget-bars .bar-row:hover, #bureau-bars .bar-row:hover, #purpose-bars .bar-row:hover, #designer-bars .bar-row:hover { background: var(--color-background-secondary); }
+    #budget-bars .bar-row.active, #bureau-bars .bar-row.active, #purpose-bars .bar-row.active, #designer-bars .bar-row.active { background: var(--color-background-info) !important; border-color: var(--color-border-info) !important; font-weight: 500; }
     .hide-board-engine { display: none !important; }
     
     #designer-bars { max-height: 250px; overflow-y: auto; padding-right: 4px; }
@@ -233,6 +233,33 @@
       --border-radius-md: 8px; --border-radius-lg: 12px; --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
     }
   </style>
+  <style>
+    /* v2.9：讓密集的管理介面在桌機、平板與手機上都保持可用 */
+    body { max-width: 1920px; margin: 0 auto; }
+    .db-header { display: flex; align-items: end; justify-content: space-between; gap: 16px; }
+    .db-header::after { content: 'v2.9 secure'; color: var(--color-text-tertiary); font-size: 11px; white-space: nowrap; }
+    .action-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px; margin: 0 0 14px; background: var(--color-background-secondary); border: .5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); }
+    .action-summary { flex: 1; min-width: 180px; font-size: 12px; color: var(--color-text-secondary); }
+    .action-summary b { color: var(--color-text-info); }
+    .filter-btn:focus-visible, .search-input-box:focus-visible, .note-input:focus-visible, .road-toggle-btn:focus-visible { outline: 3px solid var(--color-background-info); outline-offset: 2px; }
+    /* 表格自然向下展開，不產生區塊內的上下捲動條；僅保留必要的橫向捲動。 */
+    .table-container { max-height: none; overflow-x: auto; overflow-y: visible; }
+    #detail-table th { position: sticky; top: 0; z-index: 2; box-shadow: 0 1px 0 var(--color-border-secondary); }
+    .table-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 12px; font-size: 12px; color: var(--color-text-secondary); }
+    .empty-state { text-align: center; padding: 32px 16px; color: var(--color-text-tertiary); }
+    @media (max-width: 700px) {
+      body { padding: 12px; }
+      .db-header { align-items: start; flex-direction: column; gap: 4px; }
+      .db-header h1 { font-size: 21px; }
+      .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      .metric { padding: 12px; }
+      .metric-value { font-size: 21px; }
+      .two-col { grid-template-columns: 1fr; gap: 12px; }
+      .card { padding: 14px; }
+      .table-container { max-height: none; }
+      .search-input-box { max-width: none; }
+    }
+  </style>
 </head>
 <body>
 
@@ -327,6 +354,12 @@
       </div>
     </div>
     
+    <div class="action-bar" aria-live="polite">
+      <span class="action-summary" id="active-filter-summary">目前顯示全部資料</span>
+      <button class="filter-btn" id="btn-clear-filters" type="button">↺ 清除所有篩選</button>
+      <button class="filter-btn" id="btn-refresh-data" type="button">⟳ 重新載入資料</button>
+    </div>
+
     <div class="filter-section-title">🔍 智慧手動輸入篩選器：</div>
     <input type="text" id="txt-search" class="search-input-box" placeholder="輸入工程編號、流水號、地點、路權編號、廠商... (可輸入「未上傳」、「有備註」、「有路權」)">
 
@@ -389,15 +422,19 @@
             <th style="width:75px;text-align:right">交商積點</th>
             <th style="width:110px;text-align:center">完工狀態</th>
             <th style="width:70px;text-align:center;background:var(--color-background-success);color:var(--color-text-success)">土木ok</th>
-            <th style="width:110px">RD1備註 (路權)</th>
+            <th style="width:110px; min-width:110px;">RD1備註 (路權)</th>
             <th style="width:100px">所屬交換局名</th>
             <th style="width:160px; background:var(--color-background-info)">📝 手動備註</th>
-            <th style="width:200px">施工地點</th>
-            <th style="width:300px">PCD施工備註</th>
+            <th style="width:auto; min-width:180px; text-align:left;">施工地點</th>
+            <th style="width:auto; min-width:250px; text-align:left;">PCD施工備註</th>
           </tr>
         </thead>
         <tbody id="detail-tbody"></tbody>
       </table>
+    </div>
+    <div class="table-footer">
+      <span id="table-result-summary">尚未載入資料</span>
+      <button class="filter-btn" id="btn-load-more" type="button" hidden>顯示更多</button>
     </div>
   </div>
 
@@ -408,6 +445,7 @@
     const ENCRYPTED_CONFIG = "PlO6p1rLsLHkRs9Gzn6WxmjXEcO3eVuJiuiBmmeT/HC6D16bSi51XIIEMqUbRvEfObbbAcBmJhtODHjfejbLoe/ms3na34XEt95rKChiPRc+MDgXsOIxMU5M1JezpwSSTEzRh1EgT+DhQWBn5sXdLJpVs2outWlEckHn0MUcI8Ae2JMCOhaleCJbGzSvaAEh4LU9Jp+aFLKjSqXKo5Z4N+A="; 
     const CONFIG_RANGE = "工作表1!A:ZZ"; 
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby7sU7gz5mCfFSWbTS0TjkfpqeKxQgAZZwKSBwlz-gJE56hrIzFo5l1--w1-VbnsAE/exec";
+    const ROAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby8J8wBMI4feKyITveSOTNfTUz0jNimhB2TmxXR0KnLGw458FenqFYDMqY3p2fmIR2_sA/exec";
 
     let globalData = [];
     let globalRoadMasterData = {};
@@ -421,6 +459,10 @@
     let selectedStatuses = new Set();  
     let selectedBureaus = new Set();   
     let textSearchQuery = ""; 
+    let visibleRowLimit = 60;
+    const ROW_PAGE_SIZE = 60;
+    let searchDebounceTimer = null;
+    let filtersBound = false;
     
     // 🚀 補全功能：直欄控制狀態管理陣列與精準寬度定義表（16欄總合 2120px）
     let hiddenColumns = new Set();
@@ -511,6 +553,33 @@
       return null;
     }
 
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char]);
+    }
+
+    function safeUrl(value) {
+      try {
+        const url = new URL(String(value ?? ''), window.location.href);
+        return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+      } catch (_) {
+        return '';
+      }
+    }
+
+    function getTodayRocNumber() {
+      const today = new Date();
+      return Number(`${today.getFullYear() - 1911}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`);
+    }
+
+    function resetFilters() {
+      selectedEngNos.clear(); selectedBudgets.clear(); selectedPurposes.clear();
+      selectedDesigners.clear(); selectedStatuses.clear(); selectedBureaus.clear();
+      textSearchQuery = ''; visibleRowLimit = ROW_PAGE_SIZE;
+      const search = document.getElementById('txt-search');
+      if (search) search.value = '';
+      renderTable();
+    }
+
     let statusChartInstance = null;
     let pointsChartInstance = null;
 
@@ -573,10 +642,13 @@
       const roadDetailUrl = `https://sheets.googleapis.com/v4/spreadsheets/1d_VIQGF3QftLt0kGPsgNnFS6JnM7wUMJECPz6cqrAXo/values/${encodeURIComponent("施工紀錄明細表!A:ZZ")}?key=${apiKey}&valueRenderOption=FORMULA`;
 
       try {
+        const fetchJson = async url => {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`資料服務暫時無法使用（HTTP ${response.status}）。`);
+          return response.json();
+        };
         const [wRes, rmRes, rdRes] = await Promise.all([
-          fetch(workOrdersUrl).then(r => r.json()),
-          fetch(roadMasterUrl).then(r => r.json()),
-          fetch(roadDetailUrl).then(r => r.json())
+          fetchJson(workOrdersUrl), fetchJson(roadMasterUrl), fetchJson(roadDetailUrl)
         ]);
 
         if (wRes.error) throw new Error("工單試算表讀取失敗: " + wRes.error.message);
@@ -777,9 +849,11 @@
         });
 
         document.getElementById('loading-indicator').style.display = 'none';
+        const timestamp = new Intl.DateTimeFormat('zh-TW', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date());
+        //ocument.getElementById('bureau-date-label').textContent = `積點工程施工進度管理核心數據｜最後同步：${timestamp}`;
         calculateAndRenderDashboard();
       } catch (error) {
-        document.getElementById('loading-indicator').innerHTML = `❌ <b>資料同步或解析失敗</b>：${error.message}`;
+        document.getElementById('loading-indicator').innerHTML = `❌ <b>資料同步或解析失敗</b>：${escapeHtml(error.message)}`;
       }
     }
 
@@ -825,40 +899,42 @@
         });
         const purposeSorted = Object.entries(purposeMap).sort((a, b) => b[1].count - a[1].count);
 
-        const budgetBarsEl = document.getElementById('budget-bars'); budgetBarsEl.innerHTML = '';
         const maxBudgetCount = budgetSorted[0] ? budgetSorted[0][1].count : 1;
-        budgetSorted.forEach(([name, info]) => {
+        const budgetBarsEl = document.getElementById('budget-bars');
+        budgetBarsEl.innerHTML = budgetSorted.map(([name, info]) => {
           const pct = (info.count / maxBudgetCount) * 100;
-          budgetBarsEl.innerHTML += `<div class="bar-row" data-budget="${name}"><span class="bar-label" title="${name}">${name}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${budgetColors[name] || '#888780'}"></div></div><span class="bar-count">${info.count} 案</span></div>`;
-        });
+          const safeName = escapeHtml(name);
+          return `<div class="bar-row" data-budget="${safeName}"><span class="bar-label" title="${safeName}">${safeName}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${budgetColors[name] || '#888780'}"></div></div><span class="bar-count">${info.count} 案</span></div>`;
+        }).join('');
 
-        const purposeBarsEl = document.getElementById('purpose-bars'); purposeBarsEl.innerHTML = '';
         const maxPurposeCount = purposeSorted[0] ? purposeSorted[0][1].count : 1;
-        purposeSorted.forEach(([name, info], idx) => {
+        const purposeBarsEl = document.getElementById('purpose-bars');
+        purposeBarsEl.innerHTML = purposeSorted.map(([name, info], idx) => {
           const pct = (info.count / maxPurposeCount) * 100;
-          purposeBarsEl.innerHTML += `<div class="bar-row" data-purpose="${name}"><span class="bar-label" title="${name}">${name}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${getPurposeColor(name, idx)}"></div></div><span class="bar-count">${info.count} 案</span></div>`;
-        });
+          const safeName = escapeHtml(name);
+          return `<div class="bar-row" data-purpose="${safeName}"><span class="bar-label" title="${safeName}">${safeName}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${getPurposeColor(name, idx)}"></div></div><span class="bar-count">${info.count} 案</span></div>`;
+        }).join('');
 
         const bureauMap = {}; globalData.forEach(d => { if (d.bureau) { let name = d.bureau.replace('雲林', '').trim(); if (!bureauMap[name]) bureauMap[name] = 0; bureauMap[name]++; } });
         const bureauSorted = Object.entries(bureauMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
-        const bureauBarsEl = document.getElementById('bureau-bars'); bureauBarsEl.innerHTML = '';
         const maxBureauCount = bureauSorted[0] ? bureauSorted[0][1] : 1;
-        bureauSorted.forEach(([name, count]) => {
+        const bureauBarsEl = document.getElementById('bureau-bars');
+        bureauBarsEl.innerHTML = bureauSorted.map(([name, count]) => {
           const pct = (count / maxBureauCount) * 100;
-          bureauBarsEl.innerHTML += `<div class="bar-row" data-bureau="${name}"><span class="bar-label" title="${name}">${name}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:#378ADD"></div></div><span class="bar-count">${count} 案</span></div>`;
-        });
+          const safeName = escapeHtml(name);
+          return `<div class="bar-row" data-bureau="${safeName}"><span class="bar-label" title="${safeName}">${safeName}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:#378ADD"></div></div><span class="bar-count">${count} 案</span></div>`;
+        }).join('');
 
         const desMap = {}; globalData.forEach(d => { if (d.designer) { if (!desMap[d.designer]) desMap[d.designer] = { count: 0, points: 0 }; desMap[d.designer].count++; desMap[d.designer].points += (d.points || 0); } });
         const desSorted = Object.entries(desMap).sort((a, b) => b[1].count - a[1].count);
         const desBarsEl = document.getElementById('designer-bars'); 
-        desBarsEl.innerHTML = '';
         desBarsEl.style.display = 'grid'; desBarsEl.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))'; desBarsEl.style.gap = '8px';
         const maxDesCount = desSorted[0] ? desSorted[0][1].count : 1;
         const palette = ['#378ADD', '#7F77DD', '#1D9E75', '#BA7517', '#D85A30', '#D4537E'];
-        desSorted.forEach(([name, info], idx) => {
+        desBarsEl.innerHTML = desSorted.map(([name, info], idx) => {
           const pct = (info.count / maxDesCount) * 100;
-          desBarsEl.innerHTML += `<div class="bar-row" style="background:var(--color-background-secondary); padding: 6px 10px; border-radius:6px; border:0.5px solid var(--color-border-tertiary); width:100%;"><span class="bar-label" style="width:65px; min-width:65px; font-weight:600">${name}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${palette[idx % palette.length]}"></div></div><span class="bar-count" style="width:50px">${info.count} 件</span><span style="font-size:11px;color:var(--color-text-tertiary);width:75px;text-align:right;font-family:monospace">${Math.round(info.points).toLocaleString()} 點</span></div>`;
-        });
+          return `<div class="bar-row" data-designer="${escapeHtml(name)}" style="background:var(--color-background-secondary); padding: 6px 10px; border-radius:6px; border:0.5px solid var(--color-border-tertiary); width:100%;"><span class="bar-label" style="width:65px; min-width:65px; font-weight:600">${escapeHtml(name)}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${palette[idx % palette.length]}"></div></div><span class="bar-count" style="width:50px">${info.count} 件</span><span style="font-size:11px;color:var(--color-text-tertiary);width:75px;text-align:right;font-family:monospace">${Math.round(info.points).toLocaleString()} 點</span></div>`;
+        }).join('');
 
         if (statusChartInstance) statusChartInstance.destroy();
         statusChartInstance = new Chart(document.getElementById('statusChart'), {
@@ -906,8 +982,16 @@
     }
 
     function setupFilterControlLogic() {
+      if (filtersBound) return;
+      filtersBound = true;
       // 🚀 將點擊事件綁定至 Excel 匯出模組
       document.getElementById('btn-export-excel').addEventListener('click', exportFilteredTableToExcel);
+      document.getElementById('btn-clear-filters').addEventListener('click', resetFilters);
+      document.getElementById('btn-refresh-data').addEventListener('click', () => window.location.reload());
+      document.getElementById('btn-load-more').addEventListener('click', () => {
+        visibleRowLimit += ROW_PAGE_SIZE;
+        renderTable();
+      });
 
       document.getElementById('btn-toggle-budget').addEventListener('click', e => {
         const el = document.getElementById('budget-bars'); const btn = e.target;
@@ -955,33 +1039,61 @@
         const target = row.dataset.bureau; if (selectedBureaus.has(target)) selectedBureaus.delete(target); else selectedBureaus.add(target);
         renderTable(); 
       });
+      document.getElementById('designer-bars').addEventListener('click', e => {
+        const row = e.target.closest('.bar-row'); if (!row) return;
+        const target = row.dataset.designer;
+        if (selectedDesigners.has(target)) selectedDesigners.delete(target); else selectedDesigners.add(target);
+        visibleRowLimit = ROW_PAGE_SIZE;
+        renderTable();
+      });
 
-      document.getElementById('txt-search').addEventListener('input', e => { textSearchQuery = e.target.value.toLowerCase().trim(); renderTable(); });
+      document.getElementById('txt-search').addEventListener('input', e => {
+        clearTimeout(searchDebounceTimer);
+        const value = e.target.value;
+        searchDebounceTimer = setTimeout(() => {
+          textSearchQuery = value.toLowerCase().trim();
+          visibleRowLimit = ROW_PAGE_SIZE;
+          renderTable();
+        }, 180);
+      });
 
       document.getElementById('filter-engno-toggle-btns').addEventListener('click', e => {
         const btn = e.target.closest('.filter-btn'); if (!btn) return;
-        const target = btn.dataset.engno; if (target === 'all') selectedEngNos.clear(); else { if (selectedEngNos.has(target)) selectedEngNos.delete(target); else selectedEngNos.add(target); }
+        const target = btn.dataset.engno; if (target === 'all') selectedEngNos.clear(); else { if (selectedEngNos.has(target)) selectedEngNos.delete(target); else selectedEngNos.add(target); } visibleRowLimit = ROW_PAGE_SIZE;
         renderTable();
       });
       document.getElementById('filter-budget-btns').addEventListener('click', e => {
         const btn = e.target.closest('.filter-btn'); if (!btn) return;
-        const target = btn.dataset.budget; if (target === 'all') selectedBudgets.clear(); else { if (selectedBudgets.has(target)) selectedBudgets.delete(target); else selectedBudgets.add(target); }
+        const target = btn.dataset.budget; if (target === 'all') selectedBudgets.clear(); else { if (selectedBudgets.has(target)) selectedBudgets.delete(target); else selectedBudgets.add(target); } visibleRowLimit = ROW_PAGE_SIZE;
         renderTable();
       });
       document.getElementById('filter-purpose-btns').addEventListener('click', e => {
         const btn = e.target.closest('.filter-btn'); if (!btn) return;
-        const target = btn.dataset.purpose; if (target === 'all') selectedPurposes.clear(); else { if (selectedPurposes.has(target)) selectedPurposes.delete(target); else selectedPurposes.add(target); }
+        const target = btn.dataset.purpose; if (target === 'all') selectedPurposes.clear(); else { if (selectedPurposes.has(target)) selectedPurposes.delete(target); else selectedPurposes.add(target); } visibleRowLimit = ROW_PAGE_SIZE;
         renderTable();
       });
       document.getElementById('filter-designer-toggle-btns').addEventListener('click', e => {
         const btn = e.target.closest('.filter-btn'); if (!btn) return;
-        const target = btn.dataset.designer; if (target === 'all') selectedDesigners.clear(); else { if (selectedDesigners.has(target)) selectedDesigners.delete(target); else selectedDesigners.add(target); }
+        const target = btn.dataset.designer; if (target === 'all') selectedDesigners.clear(); else { if (selectedDesigners.has(target)) selectedDesigners.delete(target); else selectedDesigners.add(target); } visibleRowLimit = ROW_PAGE_SIZE;
         renderTable();
       });
       document.getElementById('filter-status-btns').addEventListener('click', e => {
         const btn = e.target.closest('.filter-btn'); if (!btn) return;
-        const target = btn.dataset.status; if (target === 'all') selectedStatuses.clear(); else { if (selectedStatuses.has(target)) selectedStatuses.delete(target); else selectedStatuses.add(target); }
+        const target = btn.dataset.status; if (target === 'all') selectedStatuses.clear(); else { if (selectedStatuses.has(target)) selectedStatuses.delete(target); else selectedStatuses.add(target); } visibleRowLimit = ROW_PAGE_SIZE;
         renderTable();
+      });
+
+      document.getElementById('detail-tbody').addEventListener('click', e => {
+        const control = e.target.closest('[data-action]');
+        if (!control) return;
+        const { action, id, caseNo } = control.dataset;
+        if (action === 'toggle-road') toggleRoadRow(id, caseNo, e);
+        if (action === 'save-note') saveManualNote(id);
+        if (action === 'save-road-note') saveRoadManualNote(caseNo);
+      });
+      document.getElementById('detail-tbody').addEventListener('change', e => {
+        const control = e.target.closest('[data-action="save-civil-status"]');
+        if (control) saveCivilStatus(control.dataset.id, control.checked);
       });
     }
 
@@ -1033,7 +1145,6 @@
       if (!noteInput) return;
       const noteValue = noteInput.value.trim();
       
-      const ROAD_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby8J8wBMI4feKyITveSOTNfTUz0jNimhB2TmxXR0KnLGw458FenqFYDMqY3p2fmIR2_sA/exec";
       saveBtn.innerText = "⏳ 寫入"; saveBtn.disabled = true;
       try {
         const fetchUrl = `${ROAD_APPS_SCRIPT_URL}?id=${encodeURIComponent(caseNo)}&note=${encodeURIComponent(noteValue)}`;
@@ -1111,6 +1222,9 @@
         if (btn.dataset.designer === 'all') btn.classList.toggle('active', selectedDesigners.size === 0);
         else btn.classList.toggle('active', selectedDesigners.has(btn.dataset.designer));
       });
+      document.querySelectorAll('#designer-bars .bar-row').forEach(row => {
+        row.classList.toggle('active', selectedDesigners.has(row.dataset.designer));
+      });
       document.querySelectorAll('#filter-status-btns .filter-btn').forEach(btn => {
         if (btn.dataset.status === 'all') btn.classList.toggle('active', selectedStatuses.size === 0);
         else btn.classList.toggle('active', selectedStatuses.has(btn.dataset.status));
@@ -1133,6 +1247,7 @@
     function renderRoadDetailCard(caseNo, d) {
       const road = globalRoadMasterData[caseNo];
       const details = globalRoadDetailData[caseNo] || [];
+      const safeCaseNo = escapeHtml(caseNo);
 
       if (!road) {
         const designUrl = `https://pwd.yunlin.gov.tw/YLPipe/NewApp/CaseShow?AppNo=${encodeURIComponent(caseNo)}&FolderName=DesignPic`;
@@ -1140,11 +1255,11 @@
           <div class="road-card">
             <div style="display:flex; justify-content:flex-start; align-items:center; flex-wrap:wrap; gap:16px;">
               <div style="font-size:13px; color:var(--color-text-primary);">
-                <b>🛣️ 路權案件編號：</b><span style="font-family:monospace; font-weight:700; color:var(--color-text-info);">${caseNo}</span>
+                <b>🛣️ 路權案件編號：</b><span style="font-family:monospace; font-weight:700; color:var(--color-text-info);">${safeCaseNo}</span>
                 <span style="color:var(--color-text-tertiary); margin-left:8px;">(此案件尚未在路權試算表建檔或正在同步中)</span>
               </div>
               <div style="display:flex; align-items:center; gap:8px;">
-                <a href="${designUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;"><span class="tag" style="background:#e3f2fd; color:#0b66c2; border:1px solid #bbdefb; font-weight:600;">📐 查看設計圖</span></a>
+                <a href="${escapeHtml(safeUrl(designUrl))}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;"><span class="tag" style="background:#e3f2fd; color:#0b66c2; border:1px solid #bbdefb; font-weight:600;">📐 查看設計圖</span></a>
                 <a href="https://pwd.yunlin.gov.tw/YLPipe/CaseState?AppNo=${encodeURIComponent(caseNo)}" target="_blank" rel="noopener noreferrer" class="road-link-pill">
                   🔗歷程
                 </a>
@@ -1167,15 +1282,17 @@
       }
 
       let statusTagHtml = '';
-      if (road.status.includes('完工')) statusTagHtml = `<span class="tag" style="background:var(--color-background-success); color:var(--color-text-success);">${road.status}</span>`;
-      else if (road.status.includes('退件') || road.status.includes('退回') || road.status.includes('停工') || road.status.includes('作廢')) statusTagHtml = `<span class="tag" style="background:var(--color-background-danger); color:var(--color-text-danger);">${road.status}</span>`;
-      else if (road.status.includes('發證') || road.status.includes('核准') || road.status.includes('同意') || road.status.includes('施工中')) statusTagHtml = `<span class="tag" style="background:var(--color-background-info); color:var(--color-text-info);">${road.status}</span>`;
-      else statusTagHtml = `<span class="tag" style="background:var(--color-background-secondary); color:var(--color-text-secondary);">${road.status}</span>`;
+      const safeRoadStatus = escapeHtml(road.status);
+      if (road.status.includes('完工')) statusTagHtml = `<span class="tag" style="background:var(--color-background-success); color:var(--color-text-success);">${safeRoadStatus}</span>`;
+      else if (road.status.includes('退件') || road.status.includes('退回') || road.status.includes('停工') || road.status.includes('作廢')) statusTagHtml = `<span class="tag" style="background:var(--color-background-danger); color:var(--color-text-danger);">${safeRoadStatus}</span>`;
+      else if (road.status.includes('發證') || road.status.includes('核准') || road.status.includes('同意') || road.status.includes('施工中')) statusTagHtml = `<span class="tag" style="background:var(--color-background-info); color:var(--color-text-info);">${safeRoadStatus}</span>`;
+      else statusTagHtml = `<span class="tag" style="background:var(--color-background-secondary); color:var(--color-text-secondary);">${safeRoadStatus}</span>`;
 
       const parsedLoc = parseHyperlink(road.locMap);
-      let locMarkup = road.location || '未填寫';
-      if (parsedLoc.url) {
-        locMarkup += ` <a href="${parsedLoc.url}" target="_blank" rel="noopener noreferrer" style="text-decoration:none; margin-left:6px;" title="查看地圖">🗺️ 地圖</a>`;
+      let locMarkup = escapeHtml(road.location || '未填寫');
+      const safeMapUrl = safeUrl(parsedLoc.url);
+      if (safeMapUrl) {
+        locMarkup += ` <a href="${escapeHtml(safeMapUrl)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none; margin-left:6px;" title="查看地圖">🗺️ 地圖</a>`;
       }
 
       const parsedDesign = parseHyperlink(road.design);
@@ -1188,8 +1305,9 @@
       }
 
       let designMarkup = '';
+      designUrl = safeUrl(designUrl);
       if (designUrl) {
-        designMarkup = `<a href="${designUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;"><span class="tag" style="background:#e3f2fd; color:#0b66c2; border:1px solid #bbdefb; font-weight:600;">📐 查看設計圖</span></a>`;
+        designMarkup = `<a href="${escapeHtml(designUrl)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;"><span class="tag" style="background:#e3f2fd; color:#0b66c2; border:1px solid #bbdefb; font-weight:600;">📐 查看設計圖</span></a>`;
       }
 
       let historyTableHtml = '';
@@ -1212,16 +1330,18 @@
               <tbody>
                 ${details.map(item => {
                   const parsedIn = parseHyperlink(item.checkIn);
-                  let inHtml = parsedIn.url ? `<a href="${parsedIn.url}" target="_blank" style="text-decoration:none;"><span class="tag" style="background:#e8f5e9; color:#1e8e3e; border:1px solid #c8e6c9;">📸 ${parsedIn.label}</span></a>` : `<span class="tag" style="background:var(--color-background-secondary); color:var(--color-text-secondary);">${parsedIn.label || '無'}</span>`;
+                  const safeInUrl = safeUrl(parsedIn.url);
+                  let inHtml = safeInUrl ? `<a href="${escapeHtml(safeInUrl)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;"><span class="tag" style="background:#e8f5e9; color:#1e8e3e; border:1px solid #c8e6c9;">📸 ${escapeHtml(parsedIn.label)}</span></a>` : `<span class="tag" style="background:var(--color-background-secondary); color:var(--color-text-secondary);">${escapeHtml(parsedIn.label || '無')}</span>`;
                   const parsedOut = parseHyperlink(item.checkOut);
-                  let outHtml = parsedOut.url ? `<a href="${parsedOut.url}" target="_blank" style="text-decoration:none;"><span class="tag" style="background:#e8f5e9; color:#1e8e3e; border:1px solid #c8e6c9;">📸 ${parsedOut.label}</span></a>` : `<span class="tag" style="background:var(--color-background-secondary); color:var(--color-text-secondary);">${parsedOut.label || '無'}</span>`;
+                  const safeOutUrl = safeUrl(parsedOut.url);
+                  let outHtml = safeOutUrl ? `<a href="${escapeHtml(safeOutUrl)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;"><span class="tag" style="background:#e8f5e9; color:#1e8e3e; border:1px solid #c8e6c9;">📸 ${escapeHtml(parsedOut.label)}</span></a>` : `<span class="tag" style="background:var(--color-background-secondary); color:var(--color-text-secondary);">${escapeHtml(parsedOut.label || '無')}</span>`;
                   return `
                     <tr>
-                      <td style="font-family: monospace;">${item.recordDate || ''}</td>
+                      <td style="font-family: monospace;">${escapeHtml(item.recordDate || '')}</td>
                       <td>${inHtml}</td>
                       <td>${outHtml}</td>
-                      <td style="font-family: monospace;">${item.workDate || '無'}</td>
-                      <td style="color: var(--color-text-secondary);">${item.note || ''}</td>
+                      <td style="font-family: monospace;">${escapeHtml(item.workDate || '無')}</td>
+                      <td style="color: var(--color-text-secondary);">${escapeHtml(item.note || '')}</td>
                     </tr>
                   `;
                 }).join('')}
@@ -1237,10 +1357,10 @@
         <div class="road-card">
           <div style="display: flex; justify-content: flex-start; align-items: center; border-bottom: 1px solid var(--color-border-tertiary); padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 16px;">
             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-              <span style="font-size: 14px; font-weight: 700; color: var(--color-text-info);">🛣️ 路權案件編號：<span style="font-family: monospace; font-size: 15px;">${road.caseNo}</span></span>
+              <span style="font-size: 14px; font-weight: 700; color: var(--color-text-info);">🛣️ 路權案件編號：<span style="font-family: monospace; font-size: 15px;">${escapeHtml(road.caseNo)}</span></span>
               ${statusTagHtml}
               ${permitBadge}
-              <span class="tag" style="background: var(--color-background-secondary); color: var(--color-text-secondary);">${road.caseType || '一般案件'}</span>
+              <span class="tag" style="background: var(--color-background-secondary); color: var(--color-text-secondary);">${escapeHtml(road.caseType || '一般案件')}</span>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
               ${designMarkup}
@@ -1256,15 +1376,15 @@
           <div class="road-grid">
             <div class="road-grid-cell">
               <div class="label">路權單位 / 施工目的</div>
-              <div class="value">${road.authUnit} · ${road.purpose}</div>
+              <div class="value">${escapeHtml(road.authUnit)} · ${escapeHtml(road.purpose)}</div>
             </div>
             <div class="road-grid-cell">
               <div class="label">施工廠商 / 申請人 / 監工</div>
-              <div class="value" style="font-weight:500;">${road.contractor} · 申:${road.applicant} ${road.supervisor ? '· 監:' + road.supervisor : ''}</div>
+              <div class="value" style="font-weight:500;">${escapeHtml(road.contractor)} · 申:${escapeHtml(road.applicant)} ${road.supervisor ? '· 監:' + escapeHtml(road.supervisor) : ''}</div>
             </div>
             <div class="road-grid-cell">
               <div class="label">路證日期起迄 / 完工申請日</div>
-              <div class="value" style="font-family: monospace; font-weight: 500;">${road.permitStart || '---'} ～ ${road.permitEnd || '---'} ${road.compReqDate ? '(完工申:' + road.compReqDate + ')' : ''}</div>
+              <div class="value" style="font-family: monospace; font-weight: 500;">${escapeHtml(road.permitStart || '---')} ～ ${escapeHtml(road.permitEnd || '---')} ${road.compReqDate ? '(完工申:' + escapeHtml(road.compReqDate) + ')' : ''}</div>
             </div>
             <div class="road-grid-cell">
               <div class="label">挖掘地點</div>
@@ -1273,12 +1393,12 @@
           </div>
 
           <div style="background: var(--color-background-secondary); padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 10px; color: var(--color-text-secondary); line-height: 1.5; border: 0.5px solid var(--color-border-tertiary);">
-            ${road.note ? `<div><b>📌 公所/系統備註：</b>${road.note}</div>` : ''}
-            ${road.note1 ? `<div><b>📌 備註1：</b>${road.note1}</div>` : ''}
+            ${road.note ? `<div><b>📌 公所/系統備註：</b>${escapeHtml(road.note)}</div>` : ''}
+            ${road.note1 ? `<div><b>📌 備註1：</b>${escapeHtml(road.note1)}</div>` : ''}
             <div style="display:flex; align-items:center; margin-top:6px; gap:6px; flex-wrap:wrap;">
               <b style="color:var(--color-text-primary);">📝 路權手動備註：</b>
-              <input type="text" id="road-note-${road.caseNo}" class="note-input" style="flex:1; min-width:200px; max-width:400px;" value="${road.manualNote || ''}" placeholder="輸入路權手動備註...">
-              <button id="road-save-btn-${road.caseNo}" class="note-save-btn" onclick="saveRoadManualNote('${road.caseNo}')">儲存</button>
+              <input type="text" id="road-note-${escapeHtml(road.caseNo)}" class="note-input" style="flex:1; min-width:200px; max-width:400px;" value="${escapeHtml(road.manualNote || '')}" placeholder="輸入路權手動備註...">
+              <button id="road-save-btn-${escapeHtml(road.caseNo)}" class="note-save-btn" data-action="save-road-note" data-case-no="${escapeHtml(road.caseNo)}">儲存</button>
             </div>
           </div>
 
@@ -1290,11 +1410,7 @@
     function renderTable() {
       syncFilterUIStyles();
 
-      const today = new Date();
-      const minguoYear = today.getFullYear() - 1911;
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      const todayNum = parseInt(`${minguoYear}${mm}${dd}`, 10);
+      const todayNum = getTodayRocNumber();
 
       currentFilteredData = globalData.filter(d => {
         const caseNo = extractRoadCaseNo(d.rd1Note);
@@ -1356,6 +1472,12 @@
       if(document.getElementById('filter-count')) {
         document.getElementById('filter-count').innerText = `${currentFilteredData.length.toLocaleString()} 件篩選工單`;
       }
+      const activeFilterCount = [selectedEngNos, selectedBudgets, selectedPurposes, selectedDesigners, selectedStatuses, selectedBureaus]
+        .reduce((total, set) => total + set.size, 0) + (textSearchQuery ? 1 : 0);
+      const activeSummary = document.getElementById('active-filter-summary');
+      if (activeSummary) activeSummary.innerHTML = activeFilterCount
+        ? `已套用 <b>${activeFilterCount}</b> 個篩選條件，目前符合 <b>${currentFilteredData.length.toLocaleString()}</b> 筆資料`
+        : `目前顯示全部 <b>${currentFilteredData.length.toLocaleString()}</b> 筆資料`;
 
       let subCompleted = 0, subDelayed = 0, subPending = 0;
       currentFilteredData.forEach(d => {
@@ -1395,11 +1517,13 @@
 
       const tbody = document.getElementById('detail-tbody');
       if(!tbody) return;
-      const renderLimit = currentFilteredData.slice(0, 60); 
+      const renderLimit = currentFilteredData.slice(0, visibleRowLimit); 
 
       let dynamicColspan = 16 - hiddenColumns.size;
 
       tbody.innerHTML = renderLimit.map(d => {
+        const safeId = escapeHtml(d.id);
+        const safeCaseNo = escapeHtml(extractRoadCaseNo(d.rd1Note) || '');
         const drawingVal = d.designDrawing ? String(d.designDrawing).trim() : "";
         let drawingMarkup = "";
         
@@ -1420,20 +1544,20 @@
 
           rd1Markup = `
             <div style="display:inline-flex; align-items:center; gap:4px; max-width:100%;">
-              <button class="road-toggle-btn ${isExpanded ? 'expanded' : ''}" onclick="toggleRoadRow('${d.id}', '${caseNo}', event)" title="${btnTitle}">
+              <button class="road-toggle-btn ${isExpanded ? 'expanded' : ''}" data-action="toggle-road" data-id="${safeId}" data-case-no="${safeCaseNo}" title="${escapeHtml(btnTitle)}">
                 <span class="expand-sign">${expandSign}</span>
-                <span style="font-family:monospace; font-weight:600;">${caseNo}</span>
+                <span style="font-family:monospace; font-weight:600;">${safeCaseNo}</span>
               </button>
             </div>
           `;
         } else if (d.rd1Note && String(d.rd1Note).trim() !== '' && String(d.rd1Note).trim() !== '---') {
-          rd1Markup = `<span style="font-size:12px; color:var(--color-text-secondary);">${d.rd1Note}</span>`;
+          rd1Markup = `<span style="font-size:12px; color:var(--color-text-secondary);">${escapeHtml(d.rd1Note)}</span>`;
         }
 
         let childRowMarkup = '';
         if (caseNo && isExpanded) {
           childRowMarkup = `
-            <tr class="road-child-row" id="road-child-${d.id}">
+            <tr class="road-child-row" id="road-child-${safeId}">
               <td colspan="${dynamicColspan}">
                 ${renderRoadDetailCard(caseNo, d)}
               </td>
@@ -1443,45 +1567,55 @@
 
         return `
           <tr>
-            <td style="font-family:monospace;font-size:13px;font-weight:600;color:var(--color-text-info); ${checkHide(0)}">${d.engNo || ''}</td>
-            <td style="font-family:monospace;font-size:13px;font-weight:500;color:var(--color-text-secondary); ${checkHide(1)}">${d.id || ''}</td>
-            <td style="font-size:14px; ${checkHide(2)}">${d.designer || ''}</td>
+            <td style="font-family:monospace;font-size:13px;font-weight:600;color:var(--color-text-info); ${checkHide(0)}">${escapeHtml(d.engNo)}</td>
+            <td style="font-family:monospace;font-size:13px;font-weight:500;color:var(--color-text-secondary); ${checkHide(1)}">${safeId}</td>
+            <td style="font-size:14px; ${checkHide(2)}">${escapeHtml(d.designer)}</td>
             
             <td style="text-align:center; vertical-align:middle; ${checkHide(3)}">${drawingMarkup}</td>
             
-            <td style="font-family:monospace;font-size:13px;color:var(--color-text-secondary); ${checkHide(4)}">${d.handover || ''}</td>
-            <td style="font-family:monospace;font-size:13px;color:var(--color-text-secondary); ${checkHide(5)}">${d.estComplete || ''}</td>
-            <td style="font-size:13px;color:var(--color-text-secondary); ${checkHide(6)}">${d.budget || ''}</td>
-            <td style="font-size:13px;color:var(--color-text-secondary); ${checkHide(7)}">${d.purpose || ''}</td>
+            <td style="font-family:monospace;font-size:13px;color:var(--color-text-secondary); ${checkHide(4)}">${escapeHtml(d.handover)}</td>
+            <td style="font-family:monospace;font-size:13px;color:var(--color-text-secondary); ${checkHide(5)}">${escapeHtml(d.estComplete)}</td>
+            <td style="font-size:13px;color:var(--color-text-secondary); ${checkHide(6)}">${escapeHtml(d.budget)}</td>
+            <td style="font-size:13px;color:var(--color-text-secondary); ${checkHide(7)}">${escapeHtml(d.purpose)}</td>
             <td style="text-align:right;font-weight:500;font-family:monospace;font-size:13px; ${checkHide(8)}">${Math.round(d.points || 0).toLocaleString()}</td>
             <td style="text-align:center; ${checkHide(9)}">${statusTag(d.status || '', d.estComplete || '', todayNum)}</td>
             
             <td style="text-align:center; ${checkHide(10)}">
               <div style="display:flex; align-items:center; justify-content:center; gap:4px;">
-                <input type="checkbox" id="civil-${d.id}" style="width:16px; height:16px; cursor:pointer;" ${(d.civilOk || '').startsWith('OK') ? 'checked' : ''} onchange="saveCivilStatus('${d.id}', this.checked)">
-                <span id="civil-status-${d.id}" style="font-size:11px;"></span>
+                <input type="checkbox" id="civil-${safeId}" data-action="save-civil-status" data-id="${safeId}" style="width:16px; height:16px; cursor:pointer;" ${(d.civilOk || '').startsWith('OK') ? 'checked' : ''}>
+                <span id="civil-status-${safeId}" style="font-size:11px;"></span>
               </div>
             </td>
 
-            <td style="font-size:13px;color:var(--color-text-tertiary); ${checkHide(11)}" title="${d.rd1Note || ''}">${rd1Markup}</td>
-            <td style="font-size:13px;color:var(--color-text-tertiary); ${checkHide(12)}">${d.bureau || ''}</td>
+            <td style="font-size:13px;color:var(--color-text-tertiary); ${checkHide(11)}" title="${escapeHtml(d.rd1Note)}">${rd1Markup}</td>
+            <td style="font-size:13px;color:var(--color-text-tertiary); ${checkHide(12)}">${escapeHtml(d.bureau)}</td>
             <td style="${checkHide(13)}">
               <div style="display:flex; align-items:center;">
-                <input type="text" id="note-${d.id}" class="note-input" value="${d.manualNote || ''}" placeholder="點擊鍵入備註...">
-                <button id="save-btn-${d.id}" class="note-save-btn" onclick="saveManualNote('${d.id}')">儲存</button>
+                <input type="text" id="note-${safeId}" class="note-input" value="${escapeHtml(d.manualNote || '')}" placeholder="點擊鍵入備註...">
+                <button id="save-btn-${safeId}" class="note-save-btn" data-action="save-note" data-id="${safeId}">儲存</button>
               </div>
             </td>
-            <td style="color:var(--color-text-secondary);font-size:13px; ${checkHide(14)}" title="${d.loc || ''}">${d.loc || ''}</td>
-            <td style="color:var(--color-text-secondary);font-size:13px; ${checkHide(15)}" title="${d.pcdNote || ''}">${d.pcdNote || ''}</td>
+            <td style="color:var(--color-text-secondary);font-size:13px; white-space:normal; word-break:break-all; ${checkHide(14)}" title="${escapeHtml(d.loc)}">${escapeHtml(d.loc)}</td>
+            <td style="color:var(--color-text-secondary);font-size:13px; white-space:normal; word-break:break-all; ${checkHide(15)}" title="${escapeHtml(d.pcdNote)}">${escapeHtml(d.pcdNote)}</td>
           </tr>
           ${childRowMarkup}
         `;
       }).join('');
 
-      if (currentFilteredData.length > 60) {
-        tbody.innerHTML += `<tr><td colspan="${dynamicColspan}" style="text-align:center;color:var(--color-text-tertiary);background:var(--color-background-secondary);font-size:11px;padding:8px">💡 提示：符合五維複合條件共 ${currentFilteredData.length} 筆，已自動分流顯示前 60 筆。</td></tr>`;
+      const resultSummary = document.getElementById('table-result-summary');
+      const loadMoreBtn = document.getElementById('btn-load-more');
+      if (resultSummary) resultSummary.textContent = currentFilteredData.length
+        ? `已顯示 ${renderLimit.length.toLocaleString()} / ${currentFilteredData.length.toLocaleString()} 筆`
+        : '沒有符合目前條件的工作單';
+      if (loadMoreBtn) {
+        const hasMore = currentFilteredData.length > visibleRowLimit;
+        loadMoreBtn.hidden = !hasMore;
+        loadMoreBtn.textContent = `顯示更多（再載入 ${Math.min(ROW_PAGE_SIZE, currentFilteredData.length - visibleRowLimit)} 筆）`;
+      }
+      if (currentFilteredData.length > visibleRowLimit) {
+        tbody.innerHTML += `<tr><td colspan="${dynamicColspan}" class="empty-state">尚有 ${(currentFilteredData.length - renderLimit.length).toLocaleString()} 筆資料；請按下方「顯示更多」。</td></tr>`;
       } else if (currentFilteredData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${dynamicColspan}" style="text-align:center;color:var(--color-text-tertiary);padding:24px">❌ 查無任何匹配工單。</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${dynamicColspan}" class="empty-state">❌ 查無任何匹配工單。請調整或清除篩選條件。</td></tr>`;
       }
     }
 
